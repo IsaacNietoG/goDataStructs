@@ -4,7 +4,14 @@ In this repository you can find Golang implementations of all the data structure
 
 The objective of this work is to adapt the ideas and concepts of this book to the idiomatic characteristics of Go, offering clean, efficient and well-documented code.
 
-This is not a direct translation of the book but a reinterpretation of their concepts using the traits and features of Go
+This project is developed using literate programming, where the code and its documentation are interwoven in a single, narrative-driven Org-mode document. This approach blends human-readable explanations with executable Go code, making the development process transparent and the learning experience engaging.
+
+## What is Literate Programming?
+Literate programming, pioneered by Donald Knuth, treats code as a narrative. Instead of separating code and documentation, they are written together in a way that prioritizes clarity and understanding. In this project, we use Org-mode (a powerful markup language from Emacs) to create a single document that combines detailed explanations, design decisions, and Go code. The code is then "tangled" into executable .go files and "woven" into readable documentation, ensuring that the development process is both functional and educational.
+
+## About its relation with the book that inspired it.
+
+This is not a direct translation of the book but a reinterpretation of its concepts tailored to the traits and features of Go
 
 ## Implemented:
 

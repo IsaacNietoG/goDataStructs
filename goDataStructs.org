@@ -1,0 +1,74 @@
+#+title: Estructuras de datos con Golang moderno
+#+author: Isaac Julián Nieto Gallegos
+* Introducción
+** El arte de la ciencia y la ciencia del arte
+En estos momentos que estoy escribiendo la introducción, soy un estudiante de Quinto Semestre de Ciencias de la Computación en la UNAM.
+Han pasado unos cuantos semestres desde que tomé el curso de Estructuras de Datos en la facultad, un curso que consideré clave en su momento para formar todos los conocimientos esenciales que iba a necesitar el resto de la carrera: es un curso denso que utilizando como recipiente lo que conocemos como estructuras de datos te presenta de manera discreta pero notoria -como la brisa de aire que sientes al llegar por primera vez a un lugar extranjero que no conocías- varios conocimientos y sutilezas que espero seguir utilizando el resto de mi vida como profesional: los algoritmos.
+
+He visto en mi corta vida como computólogo como solemos pasar por alto el enfoque algorítmico de la profesión, sin darnos cuenta de que el análisis de algoritmos es lo que crea la parte artística de la computación. Y en los momentos en los que estoy escribiendo esto, justamente me estaba pasando esto.
+
+Uno se deja absorber por las tecnologías que nos ofrece la computación moderna: frameworks que te permiten construir proyectos completos en cuestión de horas; metodologías "ágiles" que convierten el proceso de desarrollo de software en una cadena de comida rápida, donde se valora solamente la relación entre lineas de código escritas, tiempo invertido, y progresos logrados; agentes de IA que convierten el proceso de programación en una conversación con un ente todopoderoso que, bien aplicado, puede ser el equivalente a un equipo completo de becarios altamente entusiastas pero también tontos. Y en general, tecnologías que nos sirven para trabajar, pues evidentemente, en un mundo con un paso tan raudo y brutal como el nuestro, sería de tonto no rendirse a la producción en serie cuando el taller necesita competir con otras fábricas; pero que no poseen artesanalidad en su uso.
+La parte artística de la computación es muy fácil de ser olvidada, y justo eso es lo que me estaba pasando a mí: había dejado que el ritmo frenético de los proyectos universitarios y las herramientas "mágicas" opacaran el placer de entender, desde cero, cómo las estructuras de datos dan forma a los algoritmos con elegancia y precisión.
+
+** Mi viaje ritual
+
+Para contrarrestar esto, comienzo este proyecto, en el cual voy a revisitar la materia que tanto me agradó en sus inicios. Al puro estilo de uno de los computólogos que más admiro, porque supo dar claramente con la parte artística de la computación y supo quedarse con ella: Donald Knuth. Knuth, con su monumental The Art of Computer Programming, no solo documentó algoritmos; los elevó a la categoría de literatura técnica, donde cada línea de código es parte de una narrativa mayor. Inspirado en esa filosofía, este documento adopta el enfoque de la programación literaria (literate programming), una técnica que él mismo pionerizó. Aquí, el código en Go no es un apéndice seco, sino un hilo tejido en el relato: explicaciones detalladas, decisiones de diseño y ejemplos ejecutables se entrelazan en un solo tejido narrativo, usando Org-mode como lienzo.
+Este no es un mero porting de estructuras de datos de otro lenguaje —aunque se inspira en el libro Estructuras de Datos con Java Moderno de Canek Peláez Valdez, reinterpretando sus conceptos para las idiosincrasias de Go: su simplicidad, concurrencia nativa y énfasis en la eficiencia idiomática—. Es un ritual personal de redescubrimiento. A lo largo de estas páginas, exploraremos desde lo básico (listas enlazadas, pilas, colas) hasta lo más sofisticado (árboles AVL, heaps binarios, grafos y hasta estructuras avanzadas como árboles de Fenwick y Segment Trees, que agrego por curiosidad propia). Cada sección no solo implementará el código, sino que reflexionará sobre por qué Go lo hace de manera única: ¿cómo la garbage collection de Go simplifica la gestión de memoria en árboles balanceados? ¿O cómo los canales y goroutines pueden potenciar grafos en entornos concurrentes?
+El objetivo es doble: para mí, es un ejercicio de artesanía computacional que me reconecta con las raíces algorítmicas de la disciplina; para ti, lector, espero que sea una guía clara y motivadora para dominar estructuras de datos en Go moderno, recordándonos que, en medio del caos tecnológico, siempre hay espacio para el arte de programar con intención y belleza.
+
+** Como leer este trabajo?
+Este trabajo está escrito en org-mode con el paradigma de la programación letrada, y como tal, puede ser leído de varias maneras:
+
+La primera y la más fácil es en su forma de libro, la cual probablemente exista dentro de este repositorio. De esta forma , puedes leerlo como si directamente fuera un libro, con sus bloques de código como ejemplos del concepto de turno del que estemos hablando en ese momento. Esta forma definitivamente es la más rápida y directa de leer este trabajo.
+
+Por otro lado, la mejor forma pero puede que la más díficil es la forma en la que también fue escrito: en un entorno Emacs adecuadamente configurado para tanglear y weavear este documento, lo cual convertirá este trabajo en una pieza de lectura con bloques de código interactivos y ejecutables, al puro estilo de un Jupyter Notebook (plataforma interactiva que por cierto también nace como una forma de Programación Letrada), y además, en una pieza que generará todo el código fuente necesario para que estas estructuras de datos cobren vida como una librería con la que puedes trabajar y divertirte como si fuera una pieza de código tradicional.
+
+** Ok, pero cómo logro esta última forma?
+Sección pendiente jajaj
+
+* Genéricos
+Muchas de las estructuras de datos que se van a revisar en este trabajo son **colecciones**, es decir, agrupaciones de elementos que permiten repeticiones (por lo que no son conjuntos).
+
+Y los comportamientos y algoritmos de nuestras estructuras de datos no deben de ser dependientes al tipo de los elementos que guardan, de la misma forma en la que nuestros "algoritmos" para guardar una cosa en una caja en la vida real no cambian si estamos guardando un oso de peluche para nuestra novia, o una pila de cuadernos para mudarnos de departamento.
+
+Es decir, debemos de construir nuestras estructuras de datos para que puedan ser independientes de los tipos que van a guardar, y de esta forma podamos usar el mismo código para crear una Lista de Strings y una Lista de MitsubishiLancer2004.
+
+Para esto introducimos el concepto de genéricos, pero como no puedes señalar una solución sin primero dejar claro el problema, vamos a ver el siguiente ejemplo de código.
+
+#+begin_src go
+package main
+
+import (
+	"fmt"
+)
+
+func MaxInt(x,y int) int{
+	if x > y {
+		return x
+	}
+	return y
+}
+
+func MaxString(x,y string) string{
+	if x > y {
+		return x
+	}
+	return y
+}
+
+
+func main() {
+	scoreTchai := 35
+	scoreYael := 50
+
+	topScore := MaxInt(scoreTchai, scoreYael)
+	fmt.Printf("Top Score: %d\n", topScore)
+
+	primerApellido := MaxString("Morales", "Flores")
+	fmt.Printf(primerApellido)
+}
+#+end_src
+
+#+RESULTS:
+
+Los genéricos en Go existen desde la versión 1.18, y se implementan en tiempo de compilación utilizando
