@@ -1,5 +1,7 @@
 #+title: Estructuras de datos con Golang moderno
 #+author: Isaac Julián Nieto Gallegos
+#+latex_class: article
+#+latex_header: \usepackage{amsmath}
 * Introducción
 ** El arte de la ciencia y la ciencia del arte
 En estos momentos que estoy escribiendo la introducción, soy un estudiante de Quinto Semestre de Ciencias de la Computación en la UNAM.
@@ -29,46 +31,195 @@ Sección pendiente jajaj
 * Genéricos
 Muchas de las estructuras de datos que se van a revisar en este trabajo son **colecciones**, es decir, agrupaciones de elementos que permiten repeticiones (por lo que no son conjuntos).
 
-Y los comportamientos y algoritmos de nuestras estructuras de datos no deben de ser dependientes al tipo de los elementos que guardan, de la misma forma en la que nuestros "algoritmos" para guardar una cosa en una caja en la vida real no cambian si estamos guardando un oso de peluche para nuestra novia, o una pila de cuadernos para mudarnos de departamento.
+Y nos interesa poder realizar estas operaciones de "guardar" y "retirar" elementos de este conjunto de una manera repetible y que nos garantice que funcionará sin importar el **tipo** de los elementos que guardaremos en el conjunto. Para dejar clara esta necesidad, coloquémonos en esta situación:
 
-Es decir, debemos de construir nuestras estructuras de datos para que puedan ser independientes de los tipos que van a guardar, y de esta forma podamos usar el mismo código para crear una Lista de Strings y una Lista de MitsubishiLancer2004.
+** COMMENT El mundo sin genéricos
 
-Para esto introducimos el concepto de genéricos, pero como no puedes señalar una solución sin primero dejar claro el problema, vamos a ver el siguiente ejemplo de código.
+Estamos desarrollando una pequeña aplicación para calcular distintos tipos de máximos. En particular vamos a pensar en dos tipos de máximos: el máximo entre dos números, y el máximo entre dos cadenas de texto.
 
-#+begin_src go
-package main
+Primero que nada, como que máximo entre dos cadenas de texto? Las cadenas de texto no poseen una "relación de orden" directamente notable que podamos usar, así que primero debemos de eliminar este nivel de ambigüedad. Diremos que pensamos en el orden lexicográfico, es decir, el orden alfabético que usamos para guardar los libros en una bibilioteca según su título.
 
-import (
-	"fmt"
-)
+Comenzaremos a implementar la primera, para quitarnos trabajo trivial de encima lo más rápido posible.
 
-func MaxInt(x,y int) int{
-	if x > y {
-		return x
+#+begin_src go :package main :main no :results output :tangle miscs/intMax/intMax.go
+import "fmt"
+
+func intMax(a int, b int) int {
+	if a > b{
+		return a
 	}
-	return y
-}
 
-func MaxString(x,y string) string{
-	if x > y {
-		return x
-	}
-	return y
-}
-
-
-func main() {
-	scoreTchai := 35
-	scoreYael := 50
-
-	topScore := MaxInt(scoreTchai, scoreYael)
-	fmt.Printf("Top Score: %d\n", topScore)
-
-	primerApellido := MaxString("Morales", "Flores")
-	fmt.Printf(primerApellido)
+	return b
 }
 #+end_src
 
 #+RESULTS:
 
-Los genéricos en Go existen desde la versión 1.18, y se implementan en tiempo de compilación utilizando
+Y de paso creamos una pequeña prueba para ver que funciona correctamente.
+
+#+begin_src go :tangle miscs/intMax/intMax.go :package 'discard
+func main() {
+	fmt.Println("El maximo entre 15 y 20 es: ", intMax(15,20))
+}
+#+end_src
+
+Para comprobar que todo funciona, veremos que si corremos el archivo, nuestra función trabaja bien.
+#+begin_src shell :results output
+go run miscs/intMax/intMax.go
+#+end_src
+
+#+RESULTS:
+: El maximo entre 15 y 20 es:  20
+
+Ahora, procedamos a hacer la otra función que nos falta.
+
+Mi primer approach, y probablemente el que estés pensando tú también al leer este texto, sería implementar un orden lexicográfico a manita. Una cadena de pensamiento de la siguiente forma.
+
+Como somos fans de las definiciones matemáticas, nos vamos a nuestra biblioteca (o libro digital) de confianza y comenzamos a buscar la definición formal de orden lexicográfico. Encontramos algo de este estilo:
+
+Sean \[a, b\] cadenas vacías. Entonces un orden lexicográfico entre ellas se formaliza tal que:
+
+\[\forall[a_1...a_m],[b_1...b_n]\in\Sigma^*:[a_1...a_m]\leq [b1...bm] \iff a_1 < b_1 \lor (a_1 = b_1 \land [a_2...a_m]\leq [b_2...b_n])\]
+
+Inmediatamente observamos que esta definición se puede implementar de manera recursiva, pues tenemos los siguientes casos:
+
+Caso Base: Una de las primeras letras de la cadena es menor a otra. Retornamos la cadena a la que pertenece la mayor y terminamos
+Paso recursivo: Las primeras letras de ambas cadenas son iguales, las retiramos y comparamos las que siguen
+
+Para implementar esto de manera rápida lo haremos de manera recursiva, aunque está trivial hacerlo de manera iterativa.
+
+#+begin_src go :tangle miscs/intMax/stMax.go :main no
+package main
+import "fmt"
+
+func strMax(a string, b string) (string) {
+	if a[0] > b[0] {
+		return a
+	}
+	if a[0] < b[0] {
+		return b
+	}
+	return strMax(a[1:], b[1:])
+}
+
+#+end_src
+
+Probemos si funciona
+#+begin_src go :tangle miscs/intMax/stMax.go :package 'discard
+func main() {
+	fmt.Println("La mayor entre las cadenas Alberto y Enrique es: ", strMax("Alberto", "Enrique"))
+}
+#+end_src
+
+#+begin_src shell :results output
+
+go run miscs/intMax/stMax.go
+
+#+end_src
+
+#+RESULTS:
+: La mayor entre las cadenas Alberto y Enrique es:  Enrique
+
+Existe, sin embargo, una forma más fácil. Y es que las strings en Golang implementan directamente la interfaz Ordered, y lo hacen con el orden lexicográfico, entonces en realidad podemos hacer solamente esto:
+
+#+begin_src go :tangle miscs/intMax/stMax2.go :main no
+package main
+
+import "fmt"
+
+func strMax(a string, b string) (string) {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func main() {
+	fmt.Println("La mayor entre las cadenas Alberto y Enrique es: ", strMax("Alberto", "Enrique"))
+}
+#+end_src
+
+#+RESULTS:
+: La mayor entre las cadenas Alberto y Enrique es:  Enrique
+
+Lo cual, si la memoria no nos falla (y no ocupamos memoria, retrocede en el texto un poco) es **exactamente** el mismo código que usaremos para comparar en la función intMax. Se nos antojaría entonces poder usar una misma función para ambos casos y así no escribir doble (Do Not Repeat Yourself)
+
+El obstáculo que tenemos es que en ambas firmas necesitamos especificar los tipos que una función va a recibir, y qué nos va a retornar.
+Veamos ambas firmas:
+
+#+begin_src go
+func intMax (a int, b int) (int) {...}
+func strMax (a string, b string) (string) {...}
+#+end_src
+
+Las firmas de nuestras funciones le están pidiendo mucho a los tipos que reciben, una está pidiendo directamente que sean enteros, otra que sean strings. Se nos antojaría poder reciclar el mismo código para cualquier tipo que implemente la interfaz necesaria, que nuestra función sólo le pida eso a sus entradas.
+
+De la misma forma, cuando comencemos a declarar nuestras estructuras de datos, pensemos por ejemplo en una Lista, nos encontraríamos con este problema análogo.
+
+#+begin_src go
+
+type ListInt struct {
+	first *elementInt
+	last *elementInt
+	size int
+}
+
+type elementInt struct {
+	value int
+	prev *element
+	next *element
+}
+
+#+end_src
+
+Comenzamos a construir nuestra lista de enteros y nos encontraremos con el problema de que, bueno, sólo puede guardar enteros.
+Entonces, necesitaríamos construir también una lista de Strings, una lista de floats, una lista de MazdaMiata2005, y así por cada tipo que necesitemos, hasta el final de los tiempos.
+
+Y como en realidad no estamos accediendo a ninguna propiedad especial de los tipos que guardamos, es decir, no vamos a guardar los enteros de una manera distinta a la que guardamos las strings, pues todas estas estructuras en esencia serían la misma, solamente cambiando las declaraciones de sus elementos. Se nos antojaría que hubiera una mejor solución, no? Pues esos son los genéricos.
+
+** Un mundo con genéricos
+
+Los genéricos son una característica que todo lenguaje de programación necesita. Su propósito principal es justamente permitir que las funciones, clases, y nuestras estructuras de datos, puedan funcionar con diferentes tipos de datos sin tener que reescribir el código para cada uno. En lugar de necesitar especificar un tipo de dato concreto y con eso pedirle mucho a nuestros códigos, podemos dejar estos "marcadores de posición" que generalizarán el tipo de dato. Este "marcador de posición" luego será manejado por nuestro compilador o intérprete para el tipo de dato que sea necesario durante la ejecución.
+
+Los genéricos en Go existen desde la versión 1.18, y, al igual que en Java, se implementa en tiempo de compilación. Pero, contrario a Java, no se implementan usando borradura de tipos, se implementan usando monomorfización.
+
+Lo que hace la monomorfización es crear una versión especializada del código genérico para cada tipo concreto que luego iba a usar este código genérico. Es decir, en esencia, el compilador de Go termina creando estas funciones especializadas por nosotros y las carga a nuestro binario por nosotros, haciéndolo de la siguiente manera:
+
+1. Análisis: El compilador encunetra todas las invocaciones a código genérico
+2. Generación de código: Por cada tipo concreto que se use (sea int, string, float64), el compilador va a generar una versión especializada del código genérico.
+3. Sustitución: El compilador sustituye las llamadas al código genérico por llamadas al código especializado necesario que haya creado.
+
+Este enfoque nos ofrece muchas ventajas y desventajas, como todo. La primera desventaja visible es que si el compilador está generando varias versiones especializadas de nuestro código genérico, eso evidentemente nos va a costar más peso en el binario final.
+Pero esa desventaja nos trae también la ventaja del rendimiento, pues, aunque el código es más amplio ahora, nos ahorra hacer cualquier operación adicional en tiempo de ejecución, porque ya en los alambritos, el código que se llama en cada función es especializado y ya existente en el binario; es decir, todos los cálculos engorrosos respecto a los genéricos se hicieron en la compilación y ahí se quedaron.
+
+Más aún, esta forma de implementación de los genéricos no tiene una forma de "tronar" como si la tiene la implementación por borradura de tipos de Java. Como el compilador se encarga por nosotros de realizar casi artesanalmente el código especializado que nos estamos ahorrando hacer nosotros, en esencia no estamos haciendo ningun compromiso por usar genéricos además del ya mencionado del tamaño del binario.
+
+Pero qué pasaría si quisiéramos implementar genéricos en tiempo de ejecución en Golang como ya lo hacen lenguajes como Python? En general no habría mucho caso. Le estuve dando vueltas durante algo de tiempo a este asunto, y, fuera del compromiso que hacemos con el peso del binario (despreciable en hardware actual), la verdad es que esta implementación de Go está bastante bien alineada con lo que busca Go al ser un lenguaje compilado. Tal vez en lenguajes interpretados o en casos muy específicos podríamos añorar otra solución, pero en el caso general, la verdad es que esta implementación de genéricos es más que suficiente.
+
+Con genéricos, nuestras dos funciones anteriores pasarían a ser una sola, tal que:
+
+#+begin_src go
+package main
+import "fmt"
+import "cmp"
+
+func max[T cmp.Ordered] (a T, b T) (T) {
+	if (a > b){
+		return a
+	}
+	return b
+}
+
+func main() {
+	fmt.Println("El maximo entre 15 y 20 es: ", max(15,20))
+	fmt.Println("La mayor entre las cadenas Alberto y Enrique es: ", max("Alberto", "Enrique"))
+
+}
+
+#+end_src
+
+#+RESULTS:
+: El maximo entre 15 y 20 es:  20
+: La mayor entre las cadenas Alberto y Enrique es:  Enrique
+
+Lo único que agregamos nuevo es cmp.Ordered, la cual es la interfaz que deben implementar los tipos ordenables de Golang, es decir, los que se puedan operar con "<,>, <=, >="
