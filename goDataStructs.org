@@ -33,7 +33,7 @@ Muchas de las estructuras de datos que se van a revisar en este trabajo son **co
 
 Y nos interesa poder realizar estas operaciones de "guardar" y "retirar" elementos de este conjunto de una manera repetible y que nos garantice que funcionará sin importar el **tipo** de los elementos que guardaremos en el conjunto. Para dejar clara esta necesidad, coloquémonos en esta situación:
 
-** COMMENT El mundo sin genéricos
+** El mundo sin genéricos
 
 Estamos desarrollando una pequeña aplicación para calcular distintos tipos de máximos. En particular vamos a pensar en dos tipos de máximos: el máximo entre dos números, y el máximo entre dos cadenas de texto.
 
@@ -77,9 +77,9 @@ Mi primer approach, y probablemente el que estés pensando tú también al leer 
 
 Como somos fans de las definiciones matemáticas, nos vamos a nuestra biblioteca (o libro digital) de confianza y comenzamos a buscar la definición formal de orden lexicográfico. Encontramos algo de este estilo:
 
-Sean \[a, b\] cadenas vacías. Entonces un orden lexicográfico entre ellas se formaliza tal que:
+Sean \(a, b\) cadenas vacías. Entonces un orden lexicográfico entre ellas se formaliza tal que:
 
-\[\forall[a_1...a_m],[b_1...b_n]\in\Sigma^*:[a_1...a_m]\leq [b1...bm] \iff a_1 < b_1 \lor (a_1 = b_1 \land [a_2...a_m]\leq [b_2...b_n])\]
+\(\forall[a_1...a_m],[b_1...b_n]\in\Sigma^*:[a_1...a_m]\leq [b1...bm] \iff a_1 < b_1 \lor (a_1 = b_1 \land [a_2...a_m]\leq [b_2...b_n])\)
 
 Inmediatamente observamos que esta definición se puede implementar de manera recursiva, pues tenemos los siguientes casos:
 
@@ -223,3 +223,127 @@ func main() {
 : La mayor entre las cadenas Alberto y Enrique es:  Enrique
 
 Lo único que agregamos nuevo es cmp.Ordered, la cual es la interfaz que deben implementar los tipos ordenables de Golang, es decir, los que se puedan operar con "<,>, <=, >="
+
+Los genéricos van a ser una herramienta con la que vamos a estar trabajando durante prácticamente todo este viaje, pues nos servirán para generalizar nuestras estructuras de datos, para poder guardar cualquier tipo en las mismas sin problemas.
+
+
+
+
+* Interludio: Preparando el entorno de trabajo
+
+Antes de comenzar a ensuciarnos las manos construyendo esta biblioteca, debemos primero definirla para poder realizar una biblioteca utilizable por otros proyectos. Aunque dudo que realicemos un mejor trabajo que las implementaciones nativas (no por mucho, espero), creo que le daría una mayor formalidad a este trabajo el que pueda generar una biblioteca en condiciones, utilizable y todo.
+
+El equivalente a Golang de las librerías son los módulos. Citando a la documentación de Golang:
+
+#+begin_quote
+A module is a collection of packages that are released, versioned, and distributed together. Modules may be downloaded directly from version control repositories or from module proxy servers.
+
+A module is identified by a module path, which is declared in a go.mod file, together with information about the module’s dependencies. The module root directory is the directory that contains the go.mod file. The main module is the module containing the directory where the go command is invoked.
+#+end_quote
+
+Inicialmente, vamos a definir el módulo principal en donde vamos a estar agregando nuestros packages. Para esto, crearemos el archivo /go.mod/ con el siguiente contenido:
+
+#+begin_src text :tangle go.mod
+module github.com/IsaacNietoG/goDataStructs
+
+go 1.24.6
+#+end_src
+
+El nombre de un módulo en Go debe de darnos tanto la ruta para ser descargado como el nombre del mismo módulo en sí (y por extensión, lo que hace). De esta manera, los módulos en Go tienen esa virtud de que su mismo nombre también nos dice el lugar en donde lo podemos encontrar. Cosa que, si me preguntas, me parece algo bastante elegante y útil.
+
+En el caso de este trabajo, lo podemos encontrar en mi repositorio de Github dedicado para este trabajo, dudo que en algún momento cambie esto, pero en ese caso tendríamos que realizar la modificación pertinente.
+
+Como segunda línea, la versión para la que el módulo va a estar diseñado. Como en teoría no usaremos ningun módulo de terceros, no será necesario agregar un apartado de requires, ni cualquiera de los otros parámetros que puede contener este archivo. En dado caso que lo fuera, lo iremos tratando conforme avancemos.
+
+* Iteradores
+Muchas de las estructuras de datos que vamos a implementar son **Iterables**. Que significa que son iterables?.
+El patrón de diseño Iterador nos dice que, si tenemos una estructura de datos que comprende varios elementos dentro de sí (sea colección, sea conjunto), esta misma estructura también nos debería de proporcionar una forma de recorrerla. Más formalmente:
+#+begin_quote
+El patrón de diseño iterador provee una forma para acceder a los elementos de un objeto de manera secuencial, sin exponer su representación subyacente. Define un objeto separado llamado iterador, el cual nos permite iterar sobre el iterable.
+#+end_quote
+
+Este patrón de diseño nace con el propósito de no exponer la implementación interna del iterable, mientras nos permite recorrerlo e ir realizando acciones diversas sobre sus elementos.
+
+Vamos a definir las especificaciones que queremos que cumplan nuestros **Iterables** mediante una interfaz.
+
+Primero que nada, la firma de esta interfaz ya debe de implementar genéricos, pues su implementación nos debe de retornar "elementos" de algún tipo que evidentemente no conocemos en este momento, pues los conoceremos cuando comencemos a utilizar el iterable.
+
+Esta, al igual que el resto de las interfaces que vamos a utilizar durante este trabajo, van a vivir bajo el directorio //interfaces/ de nuestro módulo. Y, de una vez vamos a declarar el tipo.
+
+#+begin_src go
+package interfaces
+
+type Iterable[T any] interface{
+	Iterator() Iterator[T any]
+}
+
+#+end_src
+
+Lo único que nos interesa de la interfaz Iterable, por el momento, es que justamente nos proporcione la garantía de que nos va a proporcionar un Iterador
+
+Ya de paso, me permito señalar una nota sobre el comportamiento de Golang respecto a la privacidad de sus tipos.
+En Golang, el nombre de una función/atributo/tipo determina la privacidad del mismo hacia el mundo exterior. Si el susodicho empieza por mayúscula, entonces es público, y como tal, va a ser visible fuera del módulo. De esta manera, las funciones/atributos/tipos auxiliares o privados que necesitemos utilizar se verán implícitamente iniciados por letra minúscula. Lo digo de una vez, porque mientras escribimos los nombres de esta nuestra primera interfaz puede nacer esa duda.
+
+Luego, definiremos la interfaz del Iterator. Un iterador, por convención, implementa los siguientes métodos:
+
+- hasNext: Nos dice si existen más elementos "después" del elemento actual en el que está ubicado. El orden en el que se recorre una estructura puede ser trivial mientras hablamos de estructuras triviales como Listas, pero definir cuándo es que un elemento existe "después" de otro es más complicado cuando avancemos a estructuras como árboles.
+
+- next: Avanza hacia el siguiente elemento en su recorrido, no sin antes retornarnos una referencia al elemento que acaba de pasar.
+
+Entonces, la interfaz para Iterator quedaría de la siguiente forma:
+
+#+begin_src go
+
+type Iterator[T any] interface{
+	hasNext() bool
+	next() T
+}
+
+#+end_src
+
+** Operador for-each
+
+Otra razón por la que nos interesa implementar iteradores es porque de aquí también nace luego el operador for-each.
+
+El operador for-each es uno que ya conocemos, pues tiene su presencia en varios lenguajes de programación. Pero el más inmediato es obviamente Python. Este es un ejemplo del operador siendo usado.
+
+#+begin_src python :results output
+frutas = ["banana", "manzana", "mango", "pera"]
+
+for x in frutas:
+    print(x)
+#+end_src
+
+#+RESULTS:
+: banana
+: manzana
+: mango
+: pera
+
+En el caso de Golang, se usa de la siguiente forma, usando como ejemplo un Slice como estructura a iterar.
+#+begin_src go :imports fmt
+
+arreglo := [3]string{"Apple", "Mango", "Banana"}
+
+for index,element := range arreglo {
+	fmt.Println(index)
+	fmt.Println(element)
+}
+
+#+end_src
+
+#+RESULTS:
+: 0
+: Apple
+: 1
+: Mango
+: 2
+: Banana
+
+Esto se implementa en el fondo justamente como una suerte de "azucar sintáctica" que reemplaza un bucle en el que llamamos al iterador y mientras haya un siguiente elemento, realizamos un acción. Entonces, nos interesa que nuestros iterables también sean compatibles con esto.
+
+Es aquí donde usar Go nos va a cambiar un poco el paradigma respecto a esto. Porque para hacer que nuestras estructuras sean compatibles con este operador, tenemos que implementarlas de una forma distinta a como lo habríamos hecho en otros lenguajes. Por eso, el boceto de interfaces que hasta el momento habíamos hecho, no será el final (/jajaj, te cuentié mijx/). Es más, si te vas al código fuente, ni siquiera aparece.
+
+Vamos a implementar estos iterables usando canales, que es una característica de Go que, además, nos abrirá las puertas a que nuestras estructuras estén preparadas para ser concurrentes.
+
+** Canales
