@@ -344,6 +344,39 @@ Esto se implementa en el fondo justamente como una suerte de "azucar sintáctica
 
 Es aquí donde usar Go nos va a cambiar un poco el paradigma respecto a esto. Porque para hacer que nuestras estructuras sean compatibles con este operador, tenemos que implementarlas de una forma distinta a como lo habríamos hecho en otros lenguajes. Por eso, el boceto de interfaces que hasta el momento habíamos hecho, no será el final (/jajaj, te cuentié mijx/). Es más, si te vas al código fuente, ni siquiera aparece.
 
-Vamos a implementar estos iterables usando canales, que es una característica de Go que, además, nos abrirá las puertas a que nuestras estructuras estén preparadas para ser concurrentes.
+Antes de Go 1.23, esta funcionalidad se habría tenido que implementar de alguna manera relacionada probablemente a /canales/, pero tenemos la suerte y buena fortuna de que justamente en esta versión se implementó finalmente la biblioteca /iter/. Esta biblioteca nos proporciona la capacidad de que nuestros iteradores funcionen con el bucle nativo /for range/ que vimos anteriormente.
 
-** Canales
+** Package iter
+El paquete nos provee de definiciones básicas y operaciones con las que vamos a poder implementar iteradores sobre secuencias en nuestras estructuras de datos. El paquete define los siguientes tipos de iteradores:
+
+#+begin_src go :eval never
+type (
+	Seq[V any]     func(yield func(V) bool)
+	Seq2[K, V any] func(yield func(K, V) bool)
+)
+#+end_src
+
+Ambos iteradores están definidos como funciones que le van pasando elementos a una función generadora llamada "yield". Esta función yield nos sirve como una suerte de hasNext(), que al igual que esta función, irá retornando true mientras haya más elementos que explorar, y false cuando llegue el momento de finalizar.
+
+El iterador Seq devuelve un elemento, mientras que el iterador Seq2 regresa dos elementos a la vez. Pensaremos en utilizar Seq2 tal vez en diccionarios -para devolver llave y valor de un elemento a la vez- u otras estructuras en las que necesitemos que nuestra forma de iteración necesite devolver dos elementos a la vez.
+
+También debemos considerar que, para respetar las convenciones de nombrado de Golang, nuestros iteradores no van a ser devueltos por una función llamada Iterator, como habríamos hecho en otros lenguajes. En Golang, las funciones que retornarn iteradores llevan el nombre del segmento de la estructura que recorren. Por ejemplo, para definir un iterador que recorra por completo una estructura, lo declararíamos de la siguiente forma:
+
+#+begin_src go :eval never
+func (s *Set[V]) All() iter.Seq[V]
+#+end_src
+
+Vamos a profundizar más en los iteradores conforme vayamos realizando sus implementaciones para cada estructura de datos que realicemos, por lo mientras, nos quedamos con esto. Pero antes de irnos, vamos a crear por nuestra cuenta una interfaz Iterable para hacer más legibles las definiciones de nuestras estructuras. Esta interfaz nos va a obligar a implementar la función All, que, como su nombre bajo la convención nos dice, nos proporciona un iterador que va a recorrer la estructura completa.
+
+#+begin_src go :eval never
+package main
+
+import "golang/x/exp/iter"
+
+type Iterable[V any] interface{
+	All() iter.Seq[V]
+}
+
+#+end_src
+
+* Colecciones
