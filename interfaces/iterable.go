@@ -1,7 +1,7 @@
 package interfaces
 
 
-import "golang/x/exp/iter"
+import "iter"
 
 type Iterable[V any] interface{
 	All() iter.Seq[V]

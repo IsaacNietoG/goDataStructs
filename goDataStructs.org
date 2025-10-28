@@ -371,7 +371,7 @@ Vamos a profundizar más en los iteradores conforme vayamos realizando sus imple
 #+begin_src go :eval never :tangle interfaces/iterable.go :main no
 package interfaces
 
-import "golang/x/exp/iter"
+import "iter"
 
 type Iterable[V any] interface{
 	All() iter.Seq[V]
