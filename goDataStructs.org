@@ -41,7 +41,7 @@ Primero que nada, como que máximo entre dos cadenas de texto? Las cadenas de te
 
 Comenzaremos a implementar la primera, para quitarnos trabajo trivial de encima lo más rápido posible.
 
-#+begin_src go :package main :main no :results output :tangle miscs/intMax/intMax.go
+#+begin_src go :package main :main no :results output :tangle miscs/intMax/intMax.go :eval never
 import "fmt"
 
 func intMax(a int, b int) int {
@@ -53,11 +53,9 @@ func intMax(a int, b int) int {
 }
 #+end_src
 
-#+RESULTS:
-
 Y de paso creamos una pequeña prueba para ver que funciona correctamente.
 
-#+begin_src go :tangle miscs/intMax/intMax.go :package 'discard
+#+begin_src go :tangle miscs/intMax/intMax.go :package 'discard :eval never
 func main() {
 	fmt.Println("El maximo entre 15 y 20 es: ", intMax(15,20))
 }
@@ -88,7 +86,7 @@ Paso recursivo: Las primeras letras de ambas cadenas son iguales, las retiramos 
 
 Para implementar esto de manera rápida lo haremos de manera recursiva, aunque está trivial hacerlo de manera iterativa.
 
-#+begin_src go :tangle miscs/intMax/stMax.go :main no
+#+begin_src go :tangle miscs/intMax/stMax.go :main no :eval never
 package main
 import "fmt"
 
@@ -147,7 +145,7 @@ Lo cual, si la memoria no nos falla (y no ocupamos memoria, retrocede en el text
 El obstáculo que tenemos es que en ambas firmas necesitamos especificar los tipos que una función va a recibir, y qué nos va a retornar.
 Veamos ambas firmas:
 
-#+begin_src go
+#+begin_src go :eval never
 func intMax (a int, b int) (int) {...}
 func strMax (a string, b string) (string) {...}
 #+end_src
@@ -156,7 +154,7 @@ Las firmas de nuestras funciones le están pidiendo mucho a los tipos que recibe
 
 De la misma forma, cuando comencemos a declarar nuestras estructuras de datos, pensemos por ejemplo en una Lista, nos encontraríamos con este problema análogo.
 
-#+begin_src go
+#+begin_src go :eval never
 
 type ListInt struct {
 	first *elementInt
@@ -270,7 +268,7 @@ Primero que nada, la firma de esta interfaz ya debe de implementar genéricos, p
 
 Esta, al igual que el resto de las interfaces que vamos a utilizar durante este trabajo, van a vivir bajo el directorio //interfaces/ de nuestro módulo. Y, de una vez vamos a declarar el tipo.
 
-#+begin_src go
+#+begin_src go :eval never
 package interfaces
 
 type Iterable[T any] interface{
@@ -292,7 +290,7 @@ Luego, definiremos la interfaz del Iterator. Un iterador, por convención, imple
 
 Entonces, la interfaz para Iterator quedaría de la siguiente forma:
 
-#+begin_src go
+#+begin_src go :eval never
 
 type Iterator[T any] interface{
 	hasNext() bool
@@ -360,16 +358,18 @@ Ambos iteradores están definidos como funciones que le van pasando elementos a 
 
 El iterador Seq devuelve un elemento, mientras que el iterador Seq2 regresa dos elementos a la vez. Pensaremos en utilizar Seq2 tal vez en diccionarios -para devolver llave y valor de un elemento a la vez- u otras estructuras en las que necesitemos que nuestra forma de iteración necesite devolver dos elementos a la vez.
 
+De hecho, en el ejemplo de for-each de Go que vimos en páginas anteriores, el iterador que es utilizado es del tipo Seq2, pues al recorrer el slice, nos está regresando dos valores: el indice del elemento y el elemento en sí.
+
 También debemos considerar que, para respetar las convenciones de nombrado de Golang, nuestros iteradores no van a ser devueltos por una función llamada Iterator, como habríamos hecho en otros lenguajes. En Golang, las funciones que retornarn iteradores llevan el nombre del segmento de la estructura que recorren. Por ejemplo, para definir un iterador que recorra por completo una estructura, lo declararíamos de la siguiente forma:
 
-#+begin_src go :eval never
+#+begin_src go :eval never :main no
 func (s *Set[V]) All() iter.Seq[V]
 #+end_src
 
 Vamos a profundizar más en los iteradores conforme vayamos realizando sus implementaciones para cada estructura de datos que realicemos, por lo mientras, nos quedamos con esto. Pero antes de irnos, vamos a crear por nuestra cuenta una interfaz Iterable para hacer más legibles las definiciones de nuestras estructuras. Esta interfaz nos va a obligar a implementar la función All, que, como su nombre bajo la convención nos dice, nos proporciona un iterador que va a recorrer la estructura completa.
 
-#+begin_src go :eval never
-package main
+#+begin_src go :eval never :tangle interfaces/iterable.go :main no
+package interfaces
 
 import "golang/x/exp/iter"
 
@@ -380,3 +380,26 @@ type Iterable[V any] interface{
 #+end_src
 
 * Colecciones
+
+Casi todas, si no es que directamente todas las estructuras que vamos a implementar son colecciones... al intentar escribir esta parte del libro, y al intentar leerla, se antojaría definir lo que es una colección, pero de hecho acabo de tener un Deja Vu a mis clases de Álgebra Superior, donde nos dimos cuenta de que si quisiéramos dar una definición formal para conjunto/colección entonces estamos metidos en un grave problema relacionado con posibles definiciones circulares o vaguedad en las que no lo sean... entonces, para evitarnos este problema, vamos a definir nuestras colecciones no desde el significado real de esta palabra, si no desde el comportamiento que habríamos de esperar de una colección. Una colección debería de contener elementos, con los que podríamos realizar las siguientes operaciones:
+
+- Agregar elementos.
+- Eliminar elementos.
+- Verificar si un elemento existe dentro de la colección.
+- Saber si la colección está vacía.
+- Obtener el número de los elementos de su interior.
+- Limpiar la colección, es decir, despojarla de sus elementos.
+
+Además, todas las estructuras que caigan bajo la definición de colección deberían de ser iterables. Es aquí donde resulta orgánico definirnos otra interfaz llamada Coleccion, la cual extienda a Iterable e implemente todos los métodos necesarios para cumplir con las funcionalidades que hemos platicado hemos de tener.
+
+#+begin_src go :eval never :tangle interfaces/coleccion.go :main no
+package interfaces
+
+type Coleccion[V any] interface{
+	agrega(elemento V) void
+	elimina(elemento V) void
+	contiene(elemento V) bool
+}
+
+#+end_src
+
