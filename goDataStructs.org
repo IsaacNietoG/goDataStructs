@@ -396,8 +396,8 @@ Además, todas las estructuras que caigan bajo la definición de colección debe
 package interfaces
 
 type Coleccion[V any] interface{
-	agrega(elemento V) void
-	elimina(elemento V) void
+	agrega(elemento V)
+	elimina(elemento V)
 	contiene(elemento V) bool
 }
 
