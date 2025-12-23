@@ -1,49 +1,77 @@
-#+title: Estructuras de datos con Golang moderno
-#+author: Isaac Julián Nieto Gallegos
-#+latex_class: article
-#+latex_header: \usepackage{amsmath}
-#+latex_header: \usepackage{tikz}
-#+latex_header: \usetikzlibrary{calc, shapes.multipart, positioning, arrows.meta, chains}
-* Introducción
-** El arte de la ciencia y la ciencia del arte
+% Created 2025-12-23 Tue 17:06
+% Intended LaTeX compiler: pdflatex
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{tikz}
+\usetikzlibrary{calc, shapes.multipart, positioning, arrows.meta, chains}
+\author{Isaac Julián Nieto Gallegos}
+\date{\today}
+\title{Estructuras de datos con Golang moderno}
+\hypersetup{
+ pdfauthor={Isaac Julián Nieto Gallegos},
+ pdftitle={Estructuras de datos con Golang moderno},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 30.2 (Org mode 9.7.29)}, 
+ pdflang={English}}
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\section{Introducción}
+\label{sec:orge58b9cb}
+\subsection{El arte de la ciencia y la ciencia del arte}
+\label{sec:org4fce2d3}
 En estos momentos que estoy escribiendo la introducción, soy un estudiante de Quinto Semestre de Ciencias de la Computación en la UNAM.
 Han pasado unos cuantos semestres desde que tomé el curso de Estructuras de Datos en la facultad, un curso que consideré clave en su momento para formar todos los conocimientos esenciales que iba a necesitar el resto de la carrera: es un curso denso que utilizando como recipiente lo que conocemos como estructuras de datos te presenta de manera discreta pero notoria -como la brisa de aire que sientes al llegar por primera vez a un lugar extranjero que no conocías- varios conocimientos y sutilezas que espero seguir utilizando el resto de mi vida como profesional: los algoritmos.
 
 He visto en mi corta vida como computólogo como solemos pasar por alto el enfoque algorítmico de la profesión, sin darnos cuenta de que el análisis de algoritmos es lo que crea la parte artística de la computación. Y en los momentos en los que estoy escribiendo esto, justamente me estaba pasando esto.
 
-Uno se deja absorber por las tecnologías que nos ofrece la computación moderna: frameworks que te permiten construir proyectos completos en cuestión de horas; metodologías "ágiles" que convierten el proceso de desarrollo de software en una cadena de comida rápida, donde se valora solamente la relación entre lineas de código escritas, tiempo invertido, y progresos logrados; agentes de IA que convierten el proceso de programación en una conversación con un ente todopoderoso que, bien aplicado, puede ser el equivalente a un equipo completo de becarios altamente entusiastas pero también tontos. Y en general, tecnologías que nos sirven para trabajar, pues evidentemente, en un mundo con un paso tan raudo y brutal como el nuestro, sería de tonto no rendirse a la producción en serie cuando el taller necesita competir con otras fábricas; pero que no poseen artesanalidad en su uso.
-La parte artística de la computación es muy fácil de ser olvidada, y justo eso es lo que me estaba pasando a mí: había dejado que el ritmo frenético de los proyectos universitarios y las herramientas "mágicas" opacaran el placer de entender, desde cero, cómo las estructuras de datos dan forma a los algoritmos con elegancia y precisión.
-
-** Mi viaje ritual
+Uno se deja absorber por las tecnologías que nos ofrece la computación moderna: frameworks que te permiten construir proyectos completos en cuestión de horas; metodologías ``ágiles'' que convierten el proceso de desarrollo de software en una cadena de comida rápida, donde se valora solamente la relación entre lineas de código escritas, tiempo invertido, y progresos logrados; agentes de IA que convierten el proceso de programación en una conversación con un ente todopoderoso que, bien aplicado, puede ser el equivalente a un equipo completo de becarios altamente entusiastas pero también tontos. Y en general, tecnologías que nos sirven para trabajar, pues evidentemente, en un mundo con un paso tan raudo y brutal como el nuestro, sería de tonto no rendirse a la producción en serie cuando el taller necesita competir con otras fábricas; pero que no poseen artesanalidad en su uso.
+La parte artística de la computación es muy fácil de ser olvidada, y justo eso es lo que me estaba pasando a mí: había dejado que el ritmo frenético de los proyectos universitarios y las herramientas ``mágicas'' opacaran el placer de entender, desde cero, cómo las estructuras de datos dan forma a los algoritmos con elegancia y precisión.
+\subsection{Mi viaje ritual}
+\label{sec:org946e7b1}
 
 Para contrarrestar esto, comienzo este proyecto, en el cual voy a revisitar la materia que tanto me agradó en sus inicios. Al puro estilo de uno de los computólogos que más admiro, porque supo dar claramente con la parte artística de la computación y supo quedarse con ella: Donald Knuth. Knuth, con su monumental The Art of Computer Programming, no solo documentó algoritmos; los elevó a la categoría de literatura técnica, donde cada línea de código es parte de una narrativa mayor. Inspirado en esa filosofía, este documento adopta el enfoque de la programación literaria (literate programming), una técnica que él mismo pionerizó. Aquí, el código en Go no es un apéndice seco, sino un hilo tejido en el relato: explicaciones detalladas, decisiones de diseño y ejemplos ejecutables se entrelazan en un solo tejido narrativo, usando Org-mode como lienzo.
 Este no es un mero porting de estructuras de datos de otro lenguaje —aunque se inspira en el libro Estructuras de Datos con Java Moderno de Canek Peláez Valdez, reinterpretando sus conceptos para las idiosincrasias de Go: su simplicidad, concurrencia nativa y énfasis en la eficiencia idiomática—. Es un ritual personal de redescubrimiento. A lo largo de estas páginas, exploraremos desde lo básico (listas enlazadas, pilas, colas) hasta lo más sofisticado (árboles AVL, heaps binarios, grafos y hasta estructuras avanzadas como árboles de Fenwick y Segment Trees, que agrego por curiosidad propia). Cada sección no solo implementará el código, sino que reflexionará sobre por qué Go lo hace de manera única: ¿cómo la garbage collection de Go simplifica la gestión de memoria en árboles balanceados? ¿O cómo los canales y goroutines pueden potenciar grafos en entornos concurrentes?
 El objetivo es doble: para mí, es un ejercicio de artesanía computacional que me reconecta con las raíces algorítmicas de la disciplina; para ti, lector, espero que sea una guía clara y motivadora para dominar estructuras de datos en Go moderno, recordándonos que, en medio del caos tecnológico, siempre hay espacio para el arte de programar con intención y belleza.
-
-** Como leer este trabajo?
+\subsection{Como leer este trabajo?}
+\label{sec:org89801ee}
 Este trabajo está escrito en org-mode con el paradigma de la programación letrada, y como tal, puede ser leído de varias maneras:
 
 La primera y la más fácil es en su forma de libro, la cual probablemente exista dentro de este repositorio. De esta forma , puedes leerlo como si directamente fuera un libro, con sus bloques de código como ejemplos del concepto de turno del que estemos hablando en ese momento. Esta forma definitivamente es la más rápida y directa de leer este trabajo.
 
 Por otro lado, la mejor forma pero puede que la más díficil es la forma en la que también fue escrito: en un entorno Emacs adecuadamente configurado para tanglear y weavear este documento, lo cual convertirá este trabajo en una pieza de lectura con bloques de código interactivos y ejecutables, al puro estilo de un Jupyter Notebook (plataforma interactiva que por cierto también nace como una forma de Programación Letrada), y además, en una pieza que generará todo el código fuente necesario para que estas estructuras de datos cobren vida como una librería con la que puedes trabajar y divertirte como si fuera una pieza de código tradicional.
-
-** Ok, pero cómo logro esta última forma?
+\subsection{Ok, pero cómo logro esta última forma?}
+\label{sec:orgd2bc7eb}
 Sección pendiente jajaj
+\section{Genéricos}
+\label{sec:org6c9aead}
+Muchas de las estructuras de datos que se van a revisar en este trabajo son \textbf{\textbf{colecciones}}, es decir, agrupaciones de elementos que permiten repeticiones (por lo que no son conjuntos).
 
-* Genéricos
-Muchas de las estructuras de datos que se van a revisar en este trabajo son **colecciones**, es decir, agrupaciones de elementos que permiten repeticiones (por lo que no son conjuntos).
-
-Y nos interesa poder realizar estas operaciones de "guardar" y "retirar" elementos de este conjunto de una manera repetible y que nos garantice que funcionará sin importar el **tipo** de los elementos que guardaremos en el conjunto. Para dejar clara esta necesidad, coloquémonos en esta situación:
-
-** El mundo sin genéricos
+Y nos interesa poder realizar estas operaciones de ``guardar'' y ``retirar'' elementos de este conjunto de una manera repetible y que nos garantice que funcionará sin importar el \textbf{\textbf{tipo}} de los elementos que guardaremos en el conjunto. Para dejar clara esta necesidad, coloquémonos en esta situación:
+\subsection{El mundo sin genéricos}
+\label{sec:orgb56f151}
 
 Estamos desarrollando una pequeña aplicación para calcular distintos tipos de máximos. En particular vamos a pensar en dos tipos de máximos: el máximo entre dos números, y el máximo entre dos cadenas de texto.
 
-Primero que nada, como que máximo entre dos cadenas de texto? Las cadenas de texto no poseen una "relación de orden" directamente notable que podamos usar, así que primero debemos de eliminar este nivel de ambigüedad. Diremos que pensamos en el orden lexicográfico, es decir, el orden alfabético que usamos para guardar los libros en una bibilioteca según su título.
+Primero que nada, como que máximo entre dos cadenas de texto? Las cadenas de texto no poseen una ``relación de orden'' directamente notable que podamos usar, así que primero debemos de eliminar este nivel de ambigüedad. Diremos que pensamos en el orden lexicográfico, es decir, el orden alfabético que usamos para guardar los libros en una bibilioteca según su título.
 
 Comenzaremos a implementar la primera, para quitarnos trabajo trivial de encima lo más rápido posible.
 
-#+begin_src go :package main :main no :results output :tangle miscs/intMax/intMax.go :eval never
+\begin{verbatim}
 import "fmt"
 
 func intMax(a int, b int) int {
@@ -53,23 +81,20 @@ func intMax(a int, b int) int {
 
 	return b
 }
-#+end_src
+\end{verbatim}
 
 Y de paso creamos una pequeña prueba para ver que funciona correctamente.
 
-#+begin_src go :tangle miscs/intMax/intMax.go :package 'discard :eval never
+\begin{verbatim}
 func main() {
 	fmt.Println("El maximo entre 15 y 20 es: ", intMax(15,20))
 }
-#+end_src
+\end{verbatim}
 
 Para comprobar que todo funciona, veremos que si corremos el archivo, nuestra función trabaja bien.
-#+begin_src shell :results output
+\begin{verbatim}
 go run miscs/intMax/intMax.go
-#+end_src
-
-#+RESULTS:
-: El maximo entre 15 y 20 es:  20
+\end{verbatim}
 
 Ahora, procedamos a hacer la otra función que nos falta.
 
@@ -88,7 +113,7 @@ Paso recursivo: Las primeras letras de ambas cadenas son iguales, las retiramos 
 
 Para implementar esto de manera rápida lo haremos de manera recursiva, aunque está trivial hacerlo de manera iterativa.
 
-#+begin_src go :tangle miscs/intMax/stMax.go :main no :eval never
+\begin{verbatim}
 package main
 import "fmt"
 
@@ -102,27 +127,24 @@ func strMax(a string, b string) (string) {
 	return strMax(a[1:], b[1:])
 }
 
-#+end_src
+\end{verbatim}
 
 Probemos si funciona
-#+begin_src go :tangle miscs/intMax/stMax.go :package 'discard
+\begin{verbatim}
 func main() {
 	fmt.Println("La mayor entre las cadenas Alberto y Enrique es: ", strMax("Alberto", "Enrique"))
 }
-#+end_src
+\end{verbatim}
 
-#+begin_src shell :results output
+\begin{verbatim}
 
 go run miscs/intMax/stMax.go
 
-#+end_src
-
-#+RESULTS:
-: La mayor entre las cadenas Alberto y Enrique es:  Enrique
+\end{verbatim}
 
 Existe, sin embargo, una forma más fácil. Y es que las strings en Golang implementan directamente la interfaz Ordered, y lo hacen con el orden lexicográfico, entonces en realidad podemos hacer solamente esto:
 
-#+begin_src go :tangle miscs/intMax/stMax2.go :main no
+\begin{verbatim}
 package main
 
 import "fmt"
@@ -137,26 +159,23 @@ func strMax(a string, b string) (string) {
 func main() {
 	fmt.Println("La mayor entre las cadenas Alberto y Enrique es: ", strMax("Alberto", "Enrique"))
 }
-#+end_src
+\end{verbatim}
 
-#+RESULTS:
-: La mayor entre las cadenas Alberto y Enrique es:  Enrique
-
-Lo cual, si la memoria no nos falla (y no ocupamos memoria, retrocede en el texto un poco) es **exactamente** el mismo código que usaremos para comparar en la función intMax. Se nos antojaría entonces poder usar una misma función para ambos casos y así no escribir doble (Do Not Repeat Yourself)
+Lo cual, si la memoria no nos falla (y no ocupamos memoria, retrocede en el texto un poco) es \textbf{\textbf{exactamente}} el mismo código que usaremos para comparar en la función intMax. Se nos antojaría entonces poder usar una misma función para ambos casos y así no escribir doble (Do Not Repeat Yourself)
 
 El obstáculo que tenemos es que en ambas firmas necesitamos especificar los tipos que una función va a recibir, y qué nos va a retornar.
 Veamos ambas firmas:
 
-#+begin_src go :eval never
+\begin{verbatim}
 func intMax (a int, b int) (int) {...}
 func strMax (a string, b string) (string) {...}
-#+end_src
+\end{verbatim}
 
 Las firmas de nuestras funciones le están pidiendo mucho a los tipos que reciben, una está pidiendo directamente que sean enteros, otra que sean strings. Se nos antojaría poder reciclar el mismo código para cualquier tipo que implemente la interfaz necesaria, que nuestra función sólo le pida eso a sus entradas.
 
 De la misma forma, cuando comencemos a declarar nuestras estructuras de datos, pensemos por ejemplo en una Lista, nos encontraríamos con este problema análogo.
 
-#+begin_src go :eval never
+\begin{verbatim}
 
 type ListInt struct {
 	first *elementInt
@@ -170,35 +189,37 @@ type elementInt struct {
 	next *element
 }
 
-#+end_src
+\end{verbatim}
 
 Comenzamos a construir nuestra lista de enteros y nos encontraremos con el problema de que, bueno, sólo puede guardar enteros.
 Entonces, necesitaríamos construir también una lista de Strings, una lista de floats, una lista de MazdaMiata2005, y así por cada tipo que necesitemos, hasta el final de los tiempos.
 
 Y como en realidad no estamos accediendo a ninguna propiedad especial de los tipos que guardamos, es decir, no vamos a guardar los enteros de una manera distinta a la que guardamos las strings, pues todas estas estructuras en esencia serían la misma, solamente cambiando las declaraciones de sus elementos. Se nos antojaría que hubiera una mejor solución, no? Pues esos son los genéricos.
+\subsection{Un mundo con genéricos}
+\label{sec:org9d0a2f2}
 
-** Un mundo con genéricos
-
-Los genéricos son una característica que todo lenguaje de programación necesita. Su propósito principal es justamente permitir que las funciones, clases, y nuestras estructuras de datos, puedan funcionar con diferentes tipos de datos sin tener que reescribir el código para cada uno. En lugar de necesitar especificar un tipo de dato concreto y con eso pedirle mucho a nuestros códigos, podemos dejar estos "marcadores de posición" que generalizarán el tipo de dato. Este "marcador de posición" luego será manejado por nuestro compilador o intérprete para el tipo de dato que sea necesario durante la ejecución.
+Los genéricos son una característica que todo lenguaje de programación necesita. Su propósito principal es justamente permitir que las funciones, clases, y nuestras estructuras de datos, puedan funcionar con diferentes tipos de datos sin tener que reescribir el código para cada uno. En lugar de necesitar especificar un tipo de dato concreto y con eso pedirle mucho a nuestros códigos, podemos dejar estos ``marcadores de posición'' que generalizarán el tipo de dato. Este ``marcador de posición'' luego será manejado por nuestro compilador o intérprete para el tipo de dato que sea necesario durante la ejecución.
 
 Los genéricos en Go existen desde la versión 1.18, y, al igual que en Java, se implementa en tiempo de compilación. Pero, contrario a Java, no se implementan usando borradura de tipos, se implementan usando monomorfización.
 
 Lo que hace la monomorfización es crear una versión especializada del código genérico para cada tipo concreto que luego iba a usar este código genérico. Es decir, en esencia, el compilador de Go termina creando estas funciones especializadas por nosotros y las carga a nuestro binario por nosotros, haciéndolo de la siguiente manera:
 
-1. Análisis: El compilador encunetra todas las invocaciones a código genérico
-2. Generación de código: Por cada tipo concreto que se use (sea int, string, float64), el compilador va a generar una versión especializada del código genérico.
-3. Sustitución: El compilador sustituye las llamadas al código genérico por llamadas al código especializado necesario que haya creado.
+\begin{enumerate}
+\item Análisis: El compilador encunetra todas las invocaciones a código genérico
+\item Generación de código: Por cada tipo concreto que se use (sea int, string, float64), el compilador va a generar una versión especializada del código genérico.
+\item Sustitución: El compilador sustituye las llamadas al código genérico por llamadas al código especializado necesario que haya creado.
+\end{enumerate}
 
 Este enfoque nos ofrece muchas ventajas y desventajas, como todo. La primera desventaja visible es que si el compilador está generando varias versiones especializadas de nuestro código genérico, eso evidentemente nos va a costar más peso en el binario final.
 Pero esa desventaja nos trae también la ventaja del rendimiento, pues, aunque el código es más amplio ahora, nos ahorra hacer cualquier operación adicional en tiempo de ejecución, porque ya en los alambritos, el código que se llama en cada función es especializado y ya existente en el binario; es decir, todos los cálculos engorrosos respecto a los genéricos se hicieron en la compilación y ahí se quedaron.
 
-Más aún, esta forma de implementación de los genéricos no tiene una forma de "tronar" como si la tiene la implementación por borradura de tipos de Java. Como el compilador se encarga por nosotros de realizar casi artesanalmente el código especializado que nos estamos ahorrando hacer nosotros, en esencia no estamos haciendo ningun compromiso por usar genéricos además del ya mencionado del tamaño del binario.
+Más aún, esta forma de implementación de los genéricos no tiene una forma de ``tronar'' como si la tiene la implementación por borradura de tipos de Java. Como el compilador se encarga por nosotros de realizar casi artesanalmente el código especializado que nos estamos ahorrando hacer nosotros, en esencia no estamos haciendo ningun compromiso por usar genéricos además del ya mencionado del tamaño del binario.
 
 Pero qué pasaría si quisiéramos implementar genéricos en tiempo de ejecución en Golang como ya lo hacen lenguajes como Python? En general no habría mucho caso. Le estuve dando vueltas durante algo de tiempo a este asunto, y, fuera del compromiso que hacemos con el peso del binario (despreciable en hardware actual), la verdad es que esta implementación de Go está bastante bien alineada con lo que busca Go al ser un lenguaje compilado. Tal vez en lenguajes interpretados o en casos muy específicos podríamos añorar otra solución, pero en el caso general, la verdad es que esta implementación de genéricos es más que suficiente.
 
 Con genéricos, nuestras dos funciones anteriores pasarían a ser una sola, tal que:
 
-#+begin_src go
+\begin{verbatim}
 package main
 import "fmt"
 import "cmp"
@@ -216,68 +237,61 @@ func main() {
 
 }
 
-#+end_src
+\end{verbatim}
 
-#+RESULTS:
-: El maximo entre 15 y 20 es:  20
-: La mayor entre las cadenas Alberto y Enrique es:  Enrique
-
-Lo único que agregamos nuevo es cmp.Ordered, la cual es la interfaz que deben implementar los tipos ordenables de Golang, es decir, los que se puedan operar con "<,>, <=, >="
+Lo único que agregamos nuevo es cmp.Ordered, la cual es la interfaz que deben implementar los tipos ordenables de Golang, es decir, los que se puedan operar con ``<,>, <=, >=''
 
 Los genéricos van a ser una herramienta con la que vamos a estar trabajando durante prácticamente todo este viaje, pues nos servirán para generalizar nuestras estructuras de datos, para poder guardar cualquier tipo en las mismas sin problemas.
-
-
-
-
-* Interludio: Preparando el entorno de trabajo
+\section{Interludio: Preparando el entorno de trabajo}
+\label{sec:orga448495}
 
 Antes de comenzar a ensuciarnos las manos construyendo esta biblioteca, debemos primero definirla para poder realizar una biblioteca utilizable por otros proyectos. Aunque dudo que realicemos un mejor trabajo que las implementaciones nativas (no por mucho, espero), creo que le daría una mayor formalidad a este trabajo el que pueda generar una biblioteca en condiciones, utilizable y todo.
 
 El equivalente a Golang de las librerías son los módulos. Citando a la documentación de Golang:
 
-#+begin_quote
+\begin{quote}
 A module is a collection of packages that are released, versioned, and distributed together. Modules may be downloaded directly from version control repositories or from module proxy servers.
 
 A module is identified by a module path, which is declared in a go.mod file, together with information about the module’s dependencies. The module root directory is the directory that contains the go.mod file. The main module is the module containing the directory where the go command is invoked.
-#+end_quote
+\end{quote}
 
-Inicialmente, vamos a definir el módulo principal en donde vamos a estar agregando nuestros packages. Para esto, crearemos el archivo /go.mod/ con el siguiente contenido:
+Inicialmente, vamos a definir el módulo principal en donde vamos a estar agregando nuestros packages. Para esto, crearemos el archivo \emph{go.mod} con el siguiente contenido:
 
-#+begin_src text :tangle go.mod
+\begin{verbatim}
 module github.com/IsaacNietoG/goDataStructs
 
 go 1.24.6
-#+end_src
+\end{verbatim}
 
 El nombre de un módulo en Go debe de darnos tanto la ruta para ser descargado como el nombre del mismo módulo en sí (y por extensión, lo que hace). De esta manera, los módulos en Go tienen esa virtud de que su mismo nombre también nos dice el lugar en donde lo podemos encontrar. Cosa que, si me preguntas, me parece algo bastante elegante y útil.
 
 En el caso de este trabajo, lo podemos encontrar en mi repositorio de Github dedicado para este trabajo, dudo que en algún momento cambie esto, pero en ese caso tendríamos que realizar la modificación pertinente.
 
 Como segunda línea, la versión para la que el módulo va a estar diseñado. Como en teoría no usaremos ningun módulo de terceros, no será necesario agregar un apartado de requires, ni cualquiera de los otros parámetros que puede contener este archivo. En dado caso que lo fuera, lo iremos tratando conforme avancemos.
-
-* Iteradores
-Muchas de las estructuras de datos que vamos a implementar son **Iterables**. Que significa que son iterables?.
+\section{Iteradores}
+\label{sec:org5fcc1f4}
+Muchas de las estructuras de datos que vamos a implementar son \textbf{\textbf{Iterables}}. Que significa que son iterables?.
 El patrón de diseño Iterador nos dice que, si tenemos una estructura de datos que comprende varios elementos dentro de sí (sea colección, sea conjunto), esta misma estructura también nos debería de proporcionar una forma de recorrerla. Más formalmente:
-#+begin_quote
+\begin{quote}
 El patrón de diseño iterador provee una forma para acceder a los elementos de un objeto de manera secuencial, sin exponer su representación subyacente. Define un objeto separado llamado iterador, el cual nos permite iterar sobre el iterable.
-#+end_quote
+\end{quote}
 
 Este patrón de diseño nace con el propósito de no exponer la implementación interna del iterable, mientras nos permite recorrerlo e ir realizando acciones diversas sobre sus elementos.
 
-Vamos a definir las especificaciones que queremos que cumplan nuestros **Iterables** mediante una interfaz.
+Vamos a definir las especificaciones que queremos que cumplan nuestros \textbf{\textbf{Iterables}} mediante una interfaz.
 
-Primero que nada, la firma de esta interfaz ya debe de implementar genéricos, pues su implementación nos debe de retornar "elementos" de algún tipo que evidentemente no conocemos en este momento, pues los conoceremos cuando comencemos a utilizar el iterable.
+Primero que nada, la firma de esta interfaz ya debe de implementar genéricos, pues su implementación nos debe de retornar ``elementos'' de algún tipo que evidentemente no conocemos en este momento, pues los conoceremos cuando comencemos a utilizar el iterable.
 
-Esta, al igual que el resto de las interfaces que vamos a utilizar durante este trabajo, van a vivir bajo el directorio //interfaces/ de nuestro módulo. Y, de una vez vamos a declarar el tipo.
+Esta, al igual que el resto de las interfaces que vamos a utilizar durante este trabajo, van a vivir bajo el directorio \emph{/interfaces} de nuestro módulo. Y, de una vez vamos a declarar el tipo.
 
-#+begin_src go :eval never
+\begin{verbatim}
 package interfaces
 
 type Iterable[T any] interface{
 	Iterator() Iterator[T any]
 }
 
-#+end_src
+\end{verbatim}
 
 Lo único que nos interesa de la interfaz Iterable, por el momento, es que justamente nos proporcione la garantía de que nos va a proporcionar un Iterador
 
@@ -286,42 +300,38 @@ En Golang, el nombre de una función/atributo/tipo determina la privacidad del m
 
 Luego, definiremos la interfaz del Iterator. Un iterador, por convención, implementa los siguientes métodos:
 
-- hasNext: Nos dice si existen más elementos "después" del elemento actual en el que está ubicado. El orden en el que se recorre una estructura puede ser trivial mientras hablamos de estructuras triviales como Listas, pero definir cuándo es que un elemento existe "después" de otro es más complicado cuando avancemos a estructuras como árboles.
+\begin{itemize}
+\item hasNext: Nos dice si existen más elementos ``después'' del elemento actual en el que está ubicado. El orden en el que se recorre una estructura puede ser trivial mientras hablamos de estructuras triviales como Listas, pero definir cuándo es que un elemento existe ``después'' de otro es más complicado cuando avancemos a estructuras como árboles.
 
-- next: Avanza hacia el siguiente elemento en su recorrido, no sin antes retornarnos una referencia al elemento que acaba de pasar.
+\item next: Avanza hacia el siguiente elemento en su recorrido, no sin antes retornarnos una referencia al elemento que acaba de pasar.
+\end{itemize}
 
 Entonces, la interfaz para Iterator quedaría de la siguiente forma:
 
-#+begin_src go :eval never
+\begin{verbatim}
 
 type Iterator[T any] interface{
 	hasNext() bool
 	next() T
 }
 
-#+end_src
-
-** Operador for-each
+\end{verbatim}
+\subsection{Operador for-each}
+\label{sec:org46a2014}
 
 Otra razón por la que nos interesa implementar iteradores es porque de aquí también nace luego el operador for-each.
 
 El operador for-each es uno que ya conocemos, pues tiene su presencia en varios lenguajes de programación. Pero el más inmediato es obviamente Python. Este es un ejemplo del operador siendo usado.
 
-#+begin_src python :results output
+\begin{verbatim}
 frutas = ["banana", "manzana", "mango", "pera"]
 
 for x in frutas:
     print(x)
-#+end_src
-
-#+RESULTS:
-: banana
-: manzana
-: mango
-: pera
+\end{verbatim}
 
 En el caso de Golang, se usa de la siguiente forma, usando como ejemplo un Slice como estructura a iterar.
-#+begin_src go :imports fmt
+\begin{verbatim}
 
 arreglo := [3]string{"Apple", "Mango", "Banana"}
 
@@ -330,33 +340,25 @@ for index,element := range arreglo {
 	fmt.Println(element)
 }
 
-#+end_src
+\end{verbatim}
 
-#+RESULTS:
-: 0
-: Apple
-: 1
-: Mango
-: 2
-: Banana
+Esto se implementa en el fondo justamente como una suerte de ``azucar sintáctica'' que reemplaza un bucle en el que llamamos al iterador y mientras haya un siguiente elemento, realizamos un acción. Entonces, nos interesa que nuestros iterables también sean compatibles con esto.
 
-Esto se implementa en el fondo justamente como una suerte de "azucar sintáctica" que reemplaza un bucle en el que llamamos al iterador y mientras haya un siguiente elemento, realizamos un acción. Entonces, nos interesa que nuestros iterables también sean compatibles con esto.
+Es aquí donde usar Go nos va a cambiar un poco el paradigma respecto a esto. Porque para hacer que nuestras estructuras sean compatibles con este operador, tenemos que implementarlas de una forma distinta a como lo habríamos hecho en otros lenguajes. Por eso, el boceto de interfaces que hasta el momento habíamos hecho, no será el final (\emph{jajaj, te cuentié mijx}). Es más, si te vas al código fuente, ni siquiera aparece.
 
-Es aquí donde usar Go nos va a cambiar un poco el paradigma respecto a esto. Porque para hacer que nuestras estructuras sean compatibles con este operador, tenemos que implementarlas de una forma distinta a como lo habríamos hecho en otros lenguajes. Por eso, el boceto de interfaces que hasta el momento habíamos hecho, no será el final (/jajaj, te cuentié mijx/). Es más, si te vas al código fuente, ni siquiera aparece.
-
-Antes de Go 1.23, esta funcionalidad se habría tenido que implementar de alguna manera relacionada probablemente a /canales/, pero tenemos la suerte y buena fortuna de que justamente en esta versión se implementó finalmente la biblioteca /iter/. Esta biblioteca nos proporciona la capacidad de que nuestros iteradores funcionen con el bucle nativo /for range/ que vimos anteriormente.
-
-** Package iter
+Antes de Go 1.23, esta funcionalidad se habría tenido que implementar de alguna manera relacionada probablemente a \emph{canales}, pero tenemos la suerte y buena fortuna de que justamente en esta versión se implementó finalmente la biblioteca \emph{iter}. Esta biblioteca nos proporciona la capacidad de que nuestros iteradores funcionen con el bucle nativo \emph{for range} que vimos anteriormente.
+\subsection{Package iter}
+\label{sec:org2287063}
 El paquete nos provee de definiciones básicas y operaciones con las que vamos a poder implementar iteradores sobre secuencias en nuestras estructuras de datos. El paquete define los siguientes tipos de iteradores:
 
-#+begin_src go :eval never
+\begin{verbatim}
 type (
 	Seq[V any]     func(yield func(V) bool)
 	Seq2[K, V any] func(yield func(K, V) bool)
 )
-#+end_src
+\end{verbatim}
 
-Ambos iteradores están definidos como funciones que le van pasando elementos a una función generadora llamada "yield". Esta función yield nos sirve como una suerte de hasNext(), que al igual que esta función, irá retornando true mientras haya más elementos que explorar, y false cuando llegue el momento de finalizar.
+Ambos iteradores están definidos como funciones que le van pasando elementos a una función generadora llamada ``yield''. Esta función yield nos sirve como una suerte de hasNext(), que al igual que esta función, irá retornando true mientras haya más elementos que explorar, y false cuando llegue el momento de finalizar.
 
 El iterador Seq devuelve un elemento, mientras que el iterador Seq2 regresa dos elementos a la vez. Pensaremos en utilizar Seq2 tal vez en diccionarios -para devolver llave y valor de un elemento a la vez- u otras estructuras en las que necesitemos que nuestra forma de iteración necesite devolver dos elementos a la vez.
 
@@ -364,13 +366,13 @@ De hecho, en el ejemplo de for-each de Go que vimos en páginas anteriores, el i
 
 También debemos considerar que, para respetar las convenciones de nombrado de Golang, nuestros iteradores no van a ser devueltos por una función llamada Iterator, como habríamos hecho en otros lenguajes. En Golang, las funciones que retornarn iteradores llevan el nombre del segmento de la estructura que recorren. Por ejemplo, para definir un iterador que recorra por completo una estructura, lo declararíamos de la siguiente forma:
 
-#+begin_src go :eval never :main no
+\begin{verbatim}
 func (s *Set[V]) All() iter.Seq[V]
-#+end_src
+\end{verbatim}
 
 Vamos a profundizar más en los iteradores conforme vayamos realizando sus implementaciones para cada estructura de datos que realicemos, por lo mientras, nos quedamos con esto. Pero antes de irnos, vamos a crear por nuestra cuenta una interfaz Iterable para hacer más legibles las definiciones de nuestras estructuras. Esta interfaz nos va a obligar a implementar la función All, que, como su nombre bajo la convención nos dice, nos proporciona un iterador que va a recorrer la estructura completa.
 
-#+begin_src go :eval never :tangle interfaces/iterable.go :main no
+\begin{verbatim}
 package interfaces
 
 import "iter"
@@ -379,22 +381,24 @@ type Iterable[V any] interface{
 	All() iter.Seq[V]
 }
 
-#+end_src
+\end{verbatim}
+\section{Colecciones}
+\label{sec:orgb11c34e}
 
-* Colecciones
+Casi todas, si no es que directamente todas las estructuras que vamos a implementar son colecciones\ldots{} al intentar escribir esta parte del libro, y al intentar leerla, se antojaría definir lo que es una colección, pero de hecho acabo de tener un Deja Vu a mis clases de Álgebra Superior, donde nos dimos cuenta de que si quisiéramos dar una definición formal para conjunto/colección entonces estamos metidos en un grave problema relacionado con posibles definiciones circulares o vaguedad en las que no lo sean\ldots{} entonces, para evitarnos este problema, vamos a definir nuestras colecciones no desde el significado real de esta palabra, si no desde el comportamiento que habríamos de esperar de una colección. Una colección debería de contener elementos, con los que podríamos realizar las siguientes operaciones:
 
-Casi todas, si no es que directamente todas las estructuras que vamos a implementar son colecciones... al intentar escribir esta parte del libro, y al intentar leerla, se antojaría definir lo que es una colección, pero de hecho acabo de tener un Deja Vu a mis clases de Álgebra Superior, donde nos dimos cuenta de que si quisiéramos dar una definición formal para conjunto/colección entonces estamos metidos en un grave problema relacionado con posibles definiciones circulares o vaguedad en las que no lo sean... entonces, para evitarnos este problema, vamos a definir nuestras colecciones no desde el significado real de esta palabra, si no desde el comportamiento que habríamos de esperar de una colección. Una colección debería de contener elementos, con los que podríamos realizar las siguientes operaciones:
-
-- Agregar elementos.
-- Eliminar elementos.
-- Verificar si un elemento existe dentro de la colección.
-- Saber si la colección está vacía.
-- Obtener el número de los elementos de su interior.
-- Limpiar la colección, es decir, despojarla de sus elementos.
+\begin{itemize}
+\item Agregar elementos.
+\item Eliminar elementos.
+\item Verificar si un elemento existe dentro de la colección.
+\item Saber si la colección está vacía.
+\item Obtener el número de los elementos de su interior.
+\item Limpiar la colección, es decir, despojarla de sus elementos.
+\end{itemize}
 
 Además, todas las estructuras que caigan bajo la definición de colección deberían de ser iterables. Es aquí donde resulta orgánico definirnos otra interfaz llamada Coleccion, la cual extienda a Iterable e implemente todos los métodos necesarios para cumplir con las funcionalidades que hemos platicado hemos de tener.
 
-#+begin_src go :eval never :tangle interfaces/coleccion.go :main no
+\begin{verbatim}
 package interfaces
 
 type Coleccion[V any] interface{
@@ -407,30 +411,30 @@ type Coleccion[V any] interface{
 	All() iter.Seq[V]
 }
 
-#+end_src
+\end{verbatim}
 
 Aquí podemos señalar una característica importante de Golang respecto a la implementación de interfaces. En la mayoría de lenguajes de programación, para definir que una clase o tipo implementa una interfaz, es necesario hacerlo de manera explícita, con alguna palabra segura del lenguaje que nos permita escribir una declaración del tipo:
 
-#+begin_src java :eval never
+\begin{verbatim}
 
 public interface Coleccion<T> extends Iterable<T> {
     ...
 }
 
-#+end_src
+\end{verbatim}
 
 En cambio, en Golang, la implementación de una interfaz es implícita; es decir, un tipo debe definir todos los métodos definidos por una interfaz, y ya con esto se considera que dicho tipo (o interfaz en este caso) implementa a otro. Por eso, en la definición de interfaz de Colección dada previamente, la implementación de la interfaz Iterable viene implícita del hecho de que la interfaz pide implementar también el método All() iter.Seq[V]
 
 Y finalmente, la definición de esta ultima interfaz nos deja preparados para comenzar a implementar la primera estructura de datos de este tour: Las Listas.
+\section{Listas}
+\label{sec:org42461f1}
+Si pensamos solamente en una ``Lista'' así nada más, con solamente esta palabra para buscar definirla, podemos acomodar dentro de esta definición a una amplia gama de estructuras de datos. Cuando hablamos de una ``lista'' más que hablar de una estructura de datos concreta, podemos pensar incluso en una categoría de estructuras de datos que suelen obedecer al concepto sencillo ejemplificable con el ejemplo cotidiano de ``una lista de supermercado''.
 
-* Listas
-Si pensamos solamente en una "Lista" así nada más, con solamente esta palabra para buscar definirla, podemos acomodar dentro de esta definición a una amplia gama de estructuras de datos. Cuando hablamos de una "lista" más que hablar de una estructura de datos concreta, podemos pensar incluso en una categoría de estructuras de datos que suelen obedecer al concepto sencillo ejemplificable con el ejemplo cotidiano de "una lista de supermercado".
-
-La definición más débil y flexible de una lista es "una serie de elementos ordenados de manera consecutiva", ya más adelante veremos que podemos hacernos muchos líos con esta definición tan sencilla y por eso digo que, a mi consideración, esto es más una categoría. En este capítulo, vamos a pasearnos por algunas de las estructuras de datos que se pueden considerar una "Lista". Incluyendo los slices, la estructura de datos característica de Golang que puede entrar dentro de esta categoría y que veremos más adelante.
+La definición más débil y flexible de una lista es ``una serie de elementos ordenados de manera consecutiva'', ya más adelante veremos que podemos hacernos muchos líos con esta definición tan sencilla y por eso digo que, a mi consideración, esto es más una categoría. En este capítulo, vamos a pasearnos por algunas de las estructuras de datos que se pueden considerar una ``Lista''. Incluyendo los slices, la estructura de datos característica de Golang que puede entrar dentro de esta categoría y que veremos más adelante.
 
 Y ya para terminar y ponernos manos a la obra, cabe decir que toda esta categoría de estructuras de datos puede y va a implementar la interfaz Colección que vimos en el capítulo anterior, porque esta interfaz engloba los comportamientos que esperamos de una Lista, incluyendo el comportamiento obvio de que debe de ser iterable, pues al tener elementos ordenados, podemos recorrerla de principio a fin con un iterador.
-
-** Singly Linked Lists
+\subsection{Singly Linked Lists}
+\label{sec:org365fc8d}
 
 La forma de lista más sencilla en la cual podemos pensar para implementar es la Singly Linked List. Esta es la estructura de datos considerable como lista más primitiva en la que podemos pensar, pues fué implementada en 1957 en el lenguaje de programación IPL.
 
@@ -440,18 +444,16 @@ Antes de definir la estructura vamos a definir su unidad atómica: el nodo de li
 
 Un nodo es para una lista lo que un eslabón es para una cadena (de las de acero que usamos para amarrar nuestras bicis); es esa estructura de datos auxiliar que vamos a usar para que cada uno de los elementos de nuestras listas tengan las referencias necesarias para que la lista sea recorrible. En esta primera estructura de Singly Linked Lists, este nodo se define de la siguiente manera:
 
-#+NAME: definicionDeNodoSimple
-#+begin_src go :main no :eval never
+\begin{verbatim}
 type NodoSimple[V any] {
 	var elemento V
 	var siguiente *NodoSimple
 }
-#+end_src
+\end{verbatim}
 
 Un Nodo Simple (la forma en la que llamaremos el nodo de una Singly Linked List) engloba solamente dos cosas: el elemento que contiene y un puntero al siguiente Nodo Simple que sigue en la Singly Linked List.
 
 
-#+begin_export latex
 \begin{figure}[h]
 \centering
 \begin{tikzpicture}[
@@ -473,4 +475,4 @@ Un Nodo Simple (la forma en la que llamaremos el nodo de una Singly Linked List)
 \end{tikzpicture}
 \caption{Representación visual del Nodo Simple. Se almacena el elemento y el puntero al siguiente nodo.}
 \end{figure}
-#+end_export
+\end{document}
