@@ -397,19 +397,23 @@ Además, todas las estructuras que caigan bajo la definición de colección debe
 #+begin_src go :eval never :tangle interfaces/coleccion.go :main no
 package interfaces
 
+import "iter"
+
 type Coleccion[V any] interface{
-	agrega(elemento V)
-	elimina(elemento V)
-	contiene(elemento V) bool
-	esVacia() bool
-	getElementos() int
-	limpia()
+	Agrega(elemento V) (err Error)
+	Elimina(elemento V) (err Error)
+	Contiene(elemento V) (b bool, err Error)
+	EsVacia() (b bool, err Error)
+	GetElementos() (i int, err Error)
+	Limpia() (err Error)
 	All() iter.Seq[V]
 }
 
 #+end_src
 
-Aquí podemos señalar una característica importante de Golang respecto a la implementación de interfaces. En la mayoría de lenguajes de programación, para definir que una clase o tipo implementa una interfaz, es necesario hacerlo de manera explícita, con alguna palabra segura del lenguaje que nos permita escribir una declaración del tipo:
+Podrás notar que todos los métodos definidos siempre regresan un objeto Error, esto es debido a una característica particular de Golang relacionada al [[https://go.dev/blog/error-handling-and-go][manejo de errores en Go]]. Por ahora no vamos a ahondar en ello, vamos a dejar simplemente que esto afecte en las declaraciones de los métodos, pero posteriormente se abordará de manera detenida.
+
+También podemos señalar una característica importante de Golang respecto a la implementación de interfaces. En la mayoría de lenguajes de programación, para definir que una clase o tipo implementa una interfaz, es necesario hacerlo de manera explícita, con alguna palabra segura del lenguaje que nos permita escribir una declaración del tipo:
 
 #+begin_src java :eval never
 
@@ -438,13 +442,15 @@ Para cubrir la definición más débil que vimos de una lista en la sección ant
 
 Antes de definir la estructura vamos a definir su unidad atómica: el nodo de lista.
 
+*** Nodo Simple
+
 Un nodo es para una lista lo que un eslabón es para una cadena (de las de acero que usamos para amarrar nuestras bicis); es esa estructura de datos auxiliar que vamos a usar para que cada uno de los elementos de nuestras listas tengan las referencias necesarias para que la lista sea recorrible. En esta primera estructura de Singly Linked Lists, este nodo se define de la siguiente manera:
 
 #+NAME: definicionDeNodoSimple
-#+begin_src go :main no :eval never
-type NodoSimple[V any] {
+#+begin_src go :main no :eval never :package 'discard
+type nodoSimple[V any] struct {
 	var elemento V
-	var siguiente *NodoSimple
+	var siguiente *nodoSimple
 }
 #+end_src
 
@@ -474,3 +480,189 @@ Un Nodo Simple (la forma en la que llamaremos el nodo de una Singly Linked List)
 \caption{Representación visual del Nodo Simple. Se almacena el elemento y el puntero al siguiente nodo.}
 \end{figure}
 #+end_export
+
+Para respetar el principio de encapsulamiento, el Nodo Simple -al igual que cualquier abstracción interna que necesitemos para una estructura de datos- será una clase privada, en el sentido de que solamente va a ser usada dentro de la clase SinglyLinkedList, y ni su comportamiento ni funcionamiento será expuesto por arriba de la capa de abstracción que conforma la lista en sí.
+
+Una vez dicho esto y definido el nodo simple, podemos comenzar a construir esta estructura de datos.
+
+*** Esqueleteo de la clase
+
+#+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no package: 'discard :noweb tangle
+package lists
+import (
+	"iter"
+	"github.com/IsaacNietoG/goDataStructs/interfaces/coleccion"
+)
+
+<<definicionDeNodoSimple>>
+
+type SinglyLinkedList {
+	head *nodoSimple[V]
+	tail *nodoSimple[V]
+	size int
+}
+
+var _ Coleccion[any] = (*SinglyLinkedList[any])(nil)
+
+#+end_src
+
+La última linea de esta sección de código es un truco de Golang. Debido a que la implementación de Interfaces en Go es implícita, es muy fácil que se nos escape la implementación de algún método necesario para que una clase pueda ser considerada implementación de una interfaz. Y es muy probable que esto nos lleve a errores posteriores en tiempo de ejecución, lo cual es altamente indeseable.
+
+Con esta línea final podemos pedirle al compilador que nos "revise la tarea" pues lo que hace es:
+
+- Intenta declarar una variable sin nombre (por eso el _), lo cual le da la pista al compilador de que no debe de guardarla en memoria
+
+- La intenta declarar como una instancia de Colección.
+
+- Le asigna el valor de un puntero hacia una SinglyLinkedList
+
+- Esta SinglyLinkedList funcionalmente no existe, pues está siendo casteada desde /nil/, en realidad es un puntero fantasma solamente para intentar realizar la acción como tal.
+
+Es buena práctica integrar esta verificación en nuestras clases de Golang, para detectar errores de manera temprana en el desarrollo y garantizar que sí estamos implementando las interfaces que queremos; y extender las clases que queramos también.
+
+Luego declaramos los métodos necesarios para que la estructura implemente Colección
+
+#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+
+func (l *SinglyLinkedList[V]) Agrega(elemento V) (err Error){
+	<<implementacionAgregaSLL>>
+}
+
+func (l *SinglyLinkedList[V]) Elimina(elemento V) (err Error){
+	<<implementacionEliminaSLL>>
+}
+
+func (l *SinglyLinkedList[V]) Contiene(elemento V) (b bool, err Error) {
+	<<implementacionContieneSLL>>
+}
+
+func (l *SinglyLinkedList[V]) EsVacia() (b bool, err Error) {
+	<<implementacionEsVaciaSLL>>
+}
+
+func (l *SinglyLinkedList[V]) GetElementos() (i int, err Error) {
+	<<implementacionGetElementosSLL>>
+}
+
+func (l *SinglyLinkedList[V]) Limpia() (err Error){
+	<<implementacionLimpiaSLL>>
+}
+
+func (l *SinglyLinkedList[V]) All() iter.Seq[V] {
+	<<implementacionAllSLL>>
+}
+
+#+end_src
+
+Así mismo, también vamos a agregar algunos métodos propios de la clase, que van a ser los siguientes:
+
+#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+func (l *SinglyLinkedList[V]) AgregaInicio() (err Error){
+	<<implementacionAgregaInicioSLL>>
+}
+#+end_src
+
+Por omisión, todos los elementos que agreguemos a una lista serán al final, pero también nos es conveniente tener un método por si queremos agregar un elemento al mero inicio de la lista.
+
+#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+func (l *SinglyLinkedList[V]) Inserta(indice int, elemento V) (err Error){
+	<<implementacionAgregaInicioSLL>>
+}
+#+end_src
+
+Queremos poder insertar un elemento en un lugar arbitrario,  para eso es el método inserta, el cual dado un índice y elemento, inserta dicho elemento en dicho índice y recorre los consecuentes.
+
+#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+func (l *SinglyLinkedList[V]) EliminaPrimero() (elemento V, err Error){
+	<<implementacionEliminaPrimeroSLL>>
+}
+#+end_src
+
+#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+func (l *SinglyLinkedList[V]) EliminaUltimo() (elemento V, err Error){
+	<<implementacionEliminaUltimoSLL>>
+}
+#+end_src
+
+Siempre podemos eliminar tanto el primer elemento de la lista como el último. Y de una vez podemos aprovechar para que estos métodos nos regresen el elemento que eliminan.
+
+De la misma forma, a veces solamente queremos obtener estos elementos sin eliminarlos, para eso serán getPrimero y getUltimo
+
+#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+func (l *SinglyLinkedList[V]) GetPrimero() (elemento V, err Error){
+	<<implementacionGetPrimeroSLL>>
+}
+#+end_src
+
+#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+func (l *SinglyLinkedList[V]) GetUltimo() (elemento V, err Error){
+	<<implementacionGetUltimoSLL>>
+}
+#+end_src
+
+Luego, necesitamos un método para copiar la lista.
+
+#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+func (l *SinglyLinkedList[V]) Copia() (copia *SinglyLinkedList[V], err Error){
+	<<implementacionCopiaSLL>>
+}
+#+end_src
+
+Y obviamente vamos a querer un método para obtener el i-ésimo elemento de la lista.
+
+#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+func (l *SinglyLinkedList[V]) Get(i int) (elemento V, err Error){
+	<<implementacionGetSLL>>
+}
+#+end_src
+
+E inversamente, dada la referencia de un elemento (que sabemos existe en la lista) podemos saber el índice que ocupa en la misma con el siguiente método.
+
+#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+func (l *SinglyLinkedList[V]) IndiceDe(elemento *V) (i int, err Error){
+	<<implementacionIndiceDeSLL>>
+}
+#+end_src
+
+Debido a las raíces /Javaescas/ de esta obra que tratamos en la [[Introducción][introducción]], me parece también correcto implementar equivalentes a los tradicionales métodos /equals()/ y /toString()/. Para esto, vamos a hacer un pequeño paseo por la documentación y reglas de estilo de Golang para ver cuál es la mejor manera.
+
+*** Intermedio: equals y toString en GoLang
+**** Equals
+El método equals de una clase en Java nos permite revisar si dos objetos son iguales *a nivel semántico o de lógica de negocios*, es decir, más que darnos una verificación real de igualdad, nos da una verificación de *equivalencia*.
+
+En Java esto es necesario porque si simplemente utilizamos el operador ==, dos objetos que son equivalentes siempre nos van a dar un resultado negativo, porque *el operador = = compara referencias, no los objetos como tal*. En Golang la cosa cambia, porque el operador = = nos permite también comparar objetos.
+
+La [[https://go.dev/ref/spec#Operators][especificación de Go]] nos indica que podemos usar el operador == para comparar estructuras.
+
+#+begin_quote
+[...]Two struct values are equal if their corresponding non-blank field values are equal. The fields are compared in source order, and comparison stops as soon as two field values differ[...]
+#+end_quote
+
+Pero de todas formas, esto no nos sirve para motivos de nuestras estructuras de datos; ya que, usando nuestro ejemplo de las listas, esta regla de comparación nos llevaría al caso extraño de que dos listas serían reconocidas como iguales por este comparador si tienen los mismos elementos de cabeza y cola, y la misma longitud, sin importar todos los elementos de enmedio; obviamente esto no es correcto.
+
+Y en Golang no existe una interfaz que exija implementar el método equals, ni tampoco un método equals por omisión como existe en otros casos. Golang en general nos da bastante flexibilidad respecto a este tema, incluso proveyéndonos de varios mecanismos para comparar estructuras que no voy a mencionar porque considero que se escapan del alcance de este texto.
+
+Lo que podemos hacer es imitar a una estructura nativa de Golang que veremos más adelante: los slices.
+
+En la [[https://pkg.go.dev/golang.org/x/exp/slices][implementación oficial de Slices de Go]] podemos encontrar dos métodos interesantes para este asunto: Equal y EqualFunc.
+
+Equal recibe dos slices hechos de objetos genéricos que necesariamente implementan la interfaz comparable. Si implementan dicha interfaz, entonces estos objetos nos proporcionan una forma de -valga la redundancia- ser comparados. La implementación de Equal utiliza dicha forma para comparar elemento por elemento del slice y retornarnos true si ambos slices tienen elementos "iguales".
+
+Si el slice está hecho de objetos genéricos no comparables, usaremos EqualFunc, la cual recibe tres cosas: los dos slices de objetos no comparables y una función comparadora que le proporcionaremos a EqualFunc para determinar si dos objetos de este estilo son "equivalentes" o no. Esto es similar a algo que aplicaremos más adelante cuando hablemos de [[Ordenamientos]], así que por ahora, guardemos esta idea en nuestra memoria y quedémonos con esto para el tema principal de este capítulo.
+
+Usando estas dos funciones le damos flexibilidad a nuestra clase y un estilo bastante parecido a lo que ya existe en Golang, por lo que considero que respetamos el espíritu del lenguaje de programación en el que estamos trabajando.
+
+Quedando de esta forma estas funciones:
+
+#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+func Equal[T comparable](l1, l2 *SinglyLinkedList[T]) (b bool, err Error){
+	<<implementacionEqualSLL>>
+}
+func EqualFunc[E1, E2 any](l1 *SinglyLinkedList[E1], l2 *SinglyLinkedList[E2], eq func (E1, E2) bool) (b bool, err Error){
+	<<implementacionEqualFuncSLL>>
+}
+#+end_src
+
+Es más, le dimos la suficiente flexiblidad a estas funciones que en realidad *no le estamos pidiendo a EqualFunc que las estructuras guarden los mismos tipos*, siempre que nos proporciona cualquiera que sea el método para comparar balones con globos, se puede realizar.
+
+**** ToString

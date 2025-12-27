@@ -1,0 +1,91 @@
+#+title: Guia de Estilo
+
+* Motivo
+
+Debido a que uso frecuentemente varios elementos en el libro, y a cada rato me tengo que regresar a secciones anteriores del libro a recuperarlas, creo que lo mejor es guardar ciertos elementos frecuentes en este documento. Con el motivo de poder recuperarlos rápidamente siempre que los use.
+
+* Ecuaciones
+
+** Ecuación inline
+
+\(\forall[a_1...a_m],[b_1...b_n]\in\Sigma^*:[a_1...a_m]\leq [b1...bm] \iff a_1 < b_1 \lor (a_1 = b_1 \land [a_2...a_m]\leq [b_2...b_n])\)
+
+** Figura en Tikz
+#+begin_export latex
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+
+]
+
+
+\end{tikzpicture}
+\caption{Representación visual del Nodo Simple. Se almacena el elemento y el puntero al siguiente nodo.}
+\end{figure}
+#+end_export
+
+
+* Código
+
+** Código - No interactivo, tangleable
+#+begin_src go :eval never :tangle interfaces/iterable.go :main no package: 'discard
+package interfaces
+
+import "iter"
+
+type Iterable[V any] interface{
+	All() iter.Seq[V]
+}
+
+#+end_src
+
+
+** Código de ejemplo - No interactivo no tangleable
+
+#+begin_src go :eval never
+func strMax (a string, b string) (string) {...}
+#+end_src
+
+
+** Fragmento integro - Tangleable e interactivo
+Código standalone listo para correr
+#+begin_src go :tangle miscs/intMax/stMax2.go :main no
+package main
+
+import "fmt"
+
+func strMax(a string, b string) (string) {
+
+}
+
+func main() {
+
+}
+#+end_src
+
+
+** Función sin main - Tangleable
+Declaramos una función que luego vamos a usar en otra sección posterior, todavía no nos interesa declarar main.
+
+#+begin_src go :package main :main no :results output :tangle miscs/intMax/intMax.go :eval never
+import "fmt"
+
+func intMax(a int, b int) int {
+
+}
+#+end_src
+
+** Función main al final - Tangleable interactivo
+El package ya está declarado, lo único que falta es declarar la función main (al final)
+
+#+begin_src go :tangle miscs/intMax/intMax.go :package 'discard :eval never
+func main() {
+
+}
+#+end_src
+
+** Script en bash - Interactivo
+
+#+begin_src shell :results output
+go run miscs/intMax/intMax.go
+#+end_src
