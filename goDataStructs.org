@@ -487,7 +487,7 @@ Una vez dicho esto y definido el nodo simple, podemos comenzar a construir esta 
 
 *** Esqueleteo de la clase
 
-#+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no package: 'discard :noweb tangle
+#+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
 package lists
 import (
 	"iter"
@@ -522,7 +522,7 @@ Es buena práctica integrar esta verificación en nuestras clases de Golang, par
 
 Luego declaramos los métodos necesarios para que la estructura implemente Colección
 
-#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+#+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
 
 func (l *SinglyLinkedList[V]) Agrega(elemento V) (err Error){
 	<<implementacionAgregaSLL>>
@@ -556,7 +556,7 @@ func (l *SinglyLinkedList[V]) All() iter.Seq[V] {
 
 Así mismo, también vamos a agregar algunos métodos propios de la clase, que van a ser los siguientes:
 
-#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+#+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
 func (l *SinglyLinkedList[V]) AgregaInicio() (err Error){
 	<<implementacionAgregaInicioSLL>>
 }
@@ -564,7 +564,7 @@ func (l *SinglyLinkedList[V]) AgregaInicio() (err Error){
 
 Por omisión, todos los elementos que agreguemos a una lista serán al final, pero también nos es conveniente tener un método por si queremos agregar un elemento al mero inicio de la lista.
 
-#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+#+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
 func (l *SinglyLinkedList[V]) Inserta(indice int, elemento V) (err Error){
 	<<implementacionAgregaInicioSLL>>
 }
@@ -572,13 +572,13 @@ func (l *SinglyLinkedList[V]) Inserta(indice int, elemento V) (err Error){
 
 Queremos poder insertar un elemento en un lugar arbitrario,  para eso es el método inserta, el cual dado un índice y elemento, inserta dicho elemento en dicho índice y recorre los consecuentes.
 
-#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+#+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
 func (l *SinglyLinkedList[V]) EliminaPrimero() (elemento V, err Error){
 	<<implementacionEliminaPrimeroSLL>>
 }
 #+end_src
 
-#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+#+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
 func (l *SinglyLinkedList[V]) EliminaUltimo() (elemento V, err Error){
 	<<implementacionEliminaUltimoSLL>>
 }
@@ -588,13 +588,13 @@ Siempre podemos eliminar tanto el primer elemento de la lista como el último. Y
 
 De la misma forma, a veces solamente queremos obtener estos elementos sin eliminarlos, para eso serán getPrimero y getUltimo
 
-#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+#+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
 func (l *SinglyLinkedList[V]) GetPrimero() (elemento V, err Error){
 	<<implementacionGetPrimeroSLL>>
 }
 #+end_src
 
-#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+#+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
 func (l *SinglyLinkedList[V]) GetUltimo() (elemento V, err Error){
 	<<implementacionGetUltimoSLL>>
 }
@@ -602,7 +602,7 @@ func (l *SinglyLinkedList[V]) GetUltimo() (elemento V, err Error){
 
 Luego, necesitamos un método para copiar la lista.
 
-#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+#+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
 func (l *SinglyLinkedList[V]) Copia() (copia *SinglyLinkedList[V], err Error){
 	<<implementacionCopiaSLL>>
 }
@@ -610,7 +610,7 @@ func (l *SinglyLinkedList[V]) Copia() (copia *SinglyLinkedList[V], err Error){
 
 Y obviamente vamos a querer un método para obtener el i-ésimo elemento de la lista.
 
-#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+#+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
 func (l *SinglyLinkedList[V]) Get(i int) (elemento V, err Error){
 	<<implementacionGetSLL>>
 }
@@ -618,7 +618,7 @@ func (l *SinglyLinkedList[V]) Get(i int) (elemento V, err Error){
 
 E inversamente, dada la referencia de un elemento (que sabemos existe en la lista) podemos saber el índice que ocupa en la misma con el siguiente método.
 
-#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+#+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
 func (l *SinglyLinkedList[V]) IndiceDe(elemento *V) (i int, err Error){
 	<<implementacionIndiceDeSLL>>
 }
@@ -654,7 +654,7 @@ Usando estas dos funciones le damos flexibilidad a nuestra clase y un estilo bas
 
 Quedando de esta forma estas funciones:
 
-#+begin_src go :eval never :tangle lists/singlyLinkedList.go :main no package: 'discard :noweb tangle
+#+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
 func Equal[T comparable](l1, l2 *SinglyLinkedList[T]) (b bool, err Error){
 	<<implementacionEqualSLL>>
 }
@@ -666,3 +666,123 @@ func EqualFunc[E1, E2 any](l1 *SinglyLinkedList[E1], l2 *SinglyLinkedList[E2], e
 Es más, le dimos la suficiente flexiblidad a estas funciones que en realidad *no le estamos pidiendo a EqualFunc que las estructuras guarden los mismos tipos*, siempre que nos proporciona cualquiera que sea el método para comparar balones con globos, se puede realizar.
 
 **** ToString
+
+El método toString en Java se utiliza para retornar una representación escrita del objeto. Esta representación en su [[https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html#toString--][documentación]]
+se especifica como "concisa pero informativa que sea fácil de leer por una persona". Si nos ponemos a investigar la documentación de Golang en busca de un método similar, podemos encontrar la interfaz [[https://pkg.go.dev/fmt#example-Stringer][fmt.Stringer]]. Esta interfaz pide implementar un método String el cual es el equivalente directo de un toString en Java, en el sentido de que es el que le indica a Golang cómo generar dicha representación escrita del objeto.
+
+Entonces, vamos a agregar dicho método a nuestra estructura actual y a todas las subsecuentes que creemos.
+
+#+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
+func (l *SinglyLinkedList[V]) String() (s String, err Error){
+	<<implementacionStringSLL>>
+}
+#+end_src
+
+Con este último método, ya tenemos una lista de métodos que implementar para nuestra primera estructura de datos, quedando de la siguiente forma:
+
+#+begin_src bash :results output verbatim :exports results
+cat lists/singlylinkedlist.go
+#+end_src
+
+#+RESULTS:
+#+begin_example
+package lists
+import (
+	"iter"
+	"github.com/IsaacNietoG/goDataStructs/interfaces/coleccion"
+)
+
+type nodoSimple[V any] struct {
+	var elemento V
+	var siguiente *nodoSimple
+}
+
+type SinglyLinkedList {
+	head *nodoSimple[V]
+	tail *nodoSimple[V]
+	size int
+}
+
+var _ Coleccion[any] = (*SinglyLinkedList[any])(nil)
+
+func (l *SinglyLinkedList[V]) Agrega(elemento V) (err Error){
+
+}
+
+func (l *SinglyLinkedList[V]) Elimina(elemento V) (err Error){
+
+}
+
+func (l *SinglyLinkedList[V]) Contiene(elemento V) (b bool, err Error) {
+
+}
+
+func (l *SinglyLinkedList[V]) EsVacia() (b bool, err Error) {
+
+}
+
+func (l *SinglyLinkedList[V]) GetElementos() (i int, err Error) {
+
+}
+
+func (l *SinglyLinkedList[V]) Limpia() (err Error){
+
+}
+
+func (l *SinglyLinkedList[V]) All() iter.Seq[V] {
+
+}
+
+func (l *SinglyLinkedList[V]) AgregaInicio() (err Error){
+
+}
+
+func (l *SinglyLinkedList[V]) Inserta(indice int, elemento V) (err Error){
+
+}
+
+func (l *SinglyLinkedList[V]) EliminaPrimero() (elemento V, err Error){
+
+}
+
+func (l *SinglyLinkedList[V]) EliminaUltimo() (elemento V, err Error){
+
+}
+
+func (l *SinglyLinkedList[V]) GetPrimero() (elemento V, err Error){
+
+}
+
+func (l *SinglyLinkedList[V]) GetUltimo() (elemento V, err Error){
+
+}
+
+func (l *SinglyLinkedList[V]) Copia() (copia *SinglyLinkedList[V], err Error){
+
+}
+
+func (l *SinglyLinkedList[V]) Get(i int) (elemento V, err Error){
+
+}
+
+func (l *SinglyLinkedList[V]) IndiceDe(elemento *V) (i int, err Error){
+
+}
+
+func Equal[T comparable](l1, l2 *SinglyLinkedList[T]) (b bool, err Error){
+
+}
+func EqualFunc[E1, E2 any](l1 *SinglyLinkedList[E1], l2 *SinglyLinkedList[E2], eq func (E1, E2) bool) (b bool, err Error){
+
+}
+
+func (l *SinglyLinkedList[V]) String() (s String, err Error)
+#+end_example
+
+*** Implementaciones de los métodos
+
+Una vez definidos los comportamientos que se nos antojaría que tuviera nuestra estructura de datos, procedemos a comenzar a implementarlos. Para implementar los comportamientos de una clase primero tenemos que entender claramente a nivel conceptual lo que queremos que nuestra clase sea y haga. Entonces, vamos a regresar al pizarrón para pensar en qué es lo que hace a una Singly Linked List una Singly Linked List.
+
+
+
+* Ordenamientos
