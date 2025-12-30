@@ -28,10 +28,7 @@ Debido a que uso frecuentemente varios elementos en el libro, y a cada rato me t
 * Código
 
 ** Código - No interactivo, tangleable
-#+begin_src go :eval never :tangle interfaces/iterable.go :main no package: 'discard
-package interfaces
-
-import "iter"
+#+begin_src go :eval never :tangle interfaces/iterable.go :main no :package 'discard :noweb no-export
 
 type Iterable[V any] interface{
 	All() iter.Seq[V]

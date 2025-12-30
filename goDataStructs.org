@@ -449,8 +449,8 @@ Un nodo es para una lista lo que un eslabón es para una cadena (de las de acero
 #+NAME: definicionDeNodoSimple
 #+begin_src go :main no :eval never :package 'discard
 type nodoSimple[V any] struct {
-	var elemento V
-	var siguiente *nodoSimple
+	elemento V
+	siguiente *nodoSimple[V]
 }
 #+end_src
 
@@ -496,7 +496,7 @@ import (
 
 <<definicionDeNodoSimple>>
 
-type SinglyLinkedList {
+type SinglyLinkedList[V any] struct{
 	head *nodoSimple[V]
 	tail *nodoSimple[V]
 	size int
@@ -522,7 +522,7 @@ Es buena práctica integrar esta verificación en nuestras clases de Golang, par
 
 Luego declaramos los métodos necesarios para que la estructura implemente Colección
 
-#+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
+#+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb no-export
 
 func (l *SinglyLinkedList[V]) Agrega(elemento V) (err Error){
 	<<implementacionAgregaSLL>>
@@ -783,6 +783,111 @@ func (l *SinglyLinkedList[V]) String() (s String, err Error)
 
 Una vez definidos los comportamientos que se nos antojaría que tuviera nuestra estructura de datos, procedemos a comenzar a implementarlos. Para implementar los comportamientos de una clase primero tenemos que entender claramente a nivel conceptual lo que queremos que nuestra clase sea y haga. Entonces, vamos a regresar al pizarrón para pensar en qué es lo que hace a una Singly Linked List una Singly Linked List.
 
+La característica principal de este tipo de lista es que, como vimos previamente, cada uno de nuestros nodos solamente contiene una referencia a su siguiente nodo. De aquí proviene el nombre de /Singly/ Linked List. La implicación más importante que genera este hecho es que solamente la podremos recorrer en una sola dirección: desde la cabeza hasta el rabo. No podemos recorrerla de reversa, porque una vez llegado a un nodo, no tenemos una ruta para regresar a su anterior. Visualmente esto se vería de la siguiente forma:
 
+#+begin_export latex
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    node distance=1cm, % Espacio entre los nodos
+    % Definición del estilo del nodo
+    box/.style={
+        draw,
+        rectangle split,
+        rectangle split parts=2,
+        rectangle split horizontal,
+        minimum height=1cm,
+        inner sep=5pt,
+        fill=white
+    },
+    % Estilo para las flechas de enlace
+    link/.style={-Latex, thick, blue!70!black}
+]
+
+  % --- Creación de los Nodos ---
+
+  \node[box] (n1) {12 \nodepart{two} \phantom{next}};
+  \node[box, right=of n1] (n2) {45 \nodepart{two} \phantom{next}};
+  \node[box, right=of n2] (n3) {7 \nodepart{two} \phantom{next}};
+  \node[box, right=of n3] (n4) {23 \nodepart{two} \phantom{next}};
+  \node[box, right=of n4] (n5) {89 \nodepart{two} \phantom{next}};
+
+  % Nodo para representar el final de la lista (NULL)
+  \node[right=0.8cm of n5] (null) {\textbf{NULL}};
+
+  % --- Dibujado de las flechas (Enlaces) ---
+  % Conectamos la parte "two" de un nodo con el borde oeste del siguiente
+
+  \draw[link] (n1.two south |- n1.two) -- (n2.west);
+  \draw[link] (n2.two south |- n2.two) -- (n3.west);
+  \draw[link] (n3.two south |- n3.two) -- (n4.west);
+  \draw[link] (n4.two south |- n4.two) -- (n5.west);
+  \draw[link] (n5.two south |- n5.two) -- (null.west);
+
+  % --- Etiquetas adicionales ---
+  \node[above=0.2cm of n1] {head};
+  \node[above=0.2cm of n5] {tail};
+
+\end{tikzpicture}
+\caption{Representación de una lista enlazada simple con 5 elementos enteros.}
+\end{figure}
+#+end_export
+
+Visualmente podemos entonces comenzar a entender el mecanismo más general que vamos a utilizar para recorrer la lista; el cual es movernos referencia por referencia siempre hacia adelante, porque no tenemos forma de mirar atrás. Conceptualmente esto es sencillo de describir, como la mayoría de algoritmos necesarios para implementar estos comportamientos necesarios, sin embargo, van a ir naciendo ciertas particularidades cuando vayamos realizando las implementaciones.
+
+Es importante señalar que los algoritmos existen como una entidada conceptualmente separada de sus implementaciones, un algoritmo puede ser implementado en varios lenguajes de programación, siempre que el programador responsable se encargue de ajustarse a las sutilezas del lenguaje en el que lo vaya a implementar.
+
+En el libro del cual me inspiro para este texto, todos los algoritmos son vistos sin necesariamente ahondar en la implementación necesaria para que las estructuras vistas sean funcionales; sin embargo, para que la librería generada por este texto sea utilizable, es necesario que este texto sí se preocupe por las implementaciones de los algoritmos que veamos. La diferencia en este hecho reside en las filosofías de ambos textos y los resultados que buscan generar cada uno: uno es un libro con fines didácticos que busca que sus lectores se ensucien las manos para entender los conceptos, el otro (este mismo) es probablemente el soliloquio de un estudiante, que busca generar una biblioteca utilizable a través de programación letrada.
+
+De todas formas, es importante también señalar que en muchos casos los algoritmos como tal son directamente replicados del libro que inspira este texto, excepto en los casos donde no lo sea, lo cual también será aclarado.
+
+Entonces, en cada algoritmo siempre nos vamos a detener a ver las características de la implementacion decidida por el autor del texto (yo merengues).
+
+**** Agrega
+Este método es para agregar elementos a una lista, por omisión se hace al final. Tenemos dos casos diferentes: cuando la lista es vacía, y cuando contiene al menos un elemento.
+
+En cualquiera de los dos casos, las instrucciones en comuń consisten en construir un nuevo nodo /n/ e incrementar el contador de elementos en la lista. Posterior a esto, realizamos la verificación necesaria para partir a uno de los dos casos, quedando hasta el momento de esta forma la implementación:
+
+#+NAME: implementacionAgregaSLL
+#+begin_src go :eval never :main no :package 'discard :noweb no-export
+
+n:= &nodoSimple[V]{elemento: elemento}
+l.size++
+
+if l.tail == nil {
+<<caso1AgregaSLL>>
+} else {
+<<caso2AgregaSLL>>
+}
+
+return nil
+
+#+end_src
+
+Para verificar que la lista es vacía, podemos verificar sencillamente comprobando si el rabo /r/ es 'nil'. Si esto se cumple, actualizamos cabeza y rabo a referencias de 'n' y terminamos.
+
+#+NAME: caso1AgregaSLL
+#+begin_src go :eval never :main no :package 'discard :noweb no-export
+	l.head = n
+	l.tail = n
+#+end_src
+
+Antes de continuar, decir que podemos suponer con seguridad que el puntero /siguiente/ de un nodoSimple se inicializa en 'nil', mismo caso para los punteros /head/ y /tail/ de la estructura en sí. Esto es verdad porque en Golang se cumple que los atributos de tipo puntero ('*T') se inicializan en 'nil', esto no es verdad para todos los atributos, pero concretamente para este caso sí lo es.
+
+Si la lista no es vacía, entonces el rabo /r/ es distinto de 'nil'; haremos que el siguiente del rabo sea 'n' y actualizamos la referencia de tail a /n/.
+
+#+NAME: caso2AgregaSLL
+#+begin_src go :eval never :main no :package 'discard :noweb no-export
+	l.tail.siguiente = n
+	l.tail = n
+#+end_src
+
+Así quedando la implementación final de este algoritmo:
+
+#+begin_src go :eval no :main no :package 'discard :noweb yes
+<<implementacionAgregaSLL>>
+#+end_src
+
+**** Elimina
 
 * Ordenamientos
