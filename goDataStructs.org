@@ -680,12 +680,7 @@ func (l *SinglyLinkedList[V]) String() (s String, err Error){
 
 Con este último método, ya tenemos una lista de métodos que implementar para nuestra primera estructura de datos, quedando de la siguiente forma:
 
-#+begin_src bash :results output verbatim :exports results
-cat lists/singlylinkedlist.go
-#+end_src
-
-#+RESULTS:
-#+begin_example
+#+begin_src go :eval never
 package lists
 import (
 	"iter"
@@ -693,8 +688,8 @@ import (
 )
 
 type nodoSimple[V any] struct {
-	var elemento V
-	var siguiente *nodoSimple
+	elemento V
+	siguiente *nodoSimple
 }
 
 type SinglyLinkedList {
@@ -777,7 +772,7 @@ func EqualFunc[E1, E2 any](l1 *SinglyLinkedList[E1], l2 *SinglyLinkedList[E2], e
 }
 
 func (l *SinglyLinkedList[V]) String() (s String, err Error)
-#+end_example
+#+end_src
 
 *** Implementaciones de los métodos
 
@@ -889,5 +884,21 @@ Así quedando la implementación final de este algoritmo:
 #+end_src
 
 **** Elimina
+
+Para eliminar un elemento de la lista -obviamente- primero tenemos que encontrarlo. Entonces, primero tenemos que tratar un algoritmo auxiliar e implementarlo, el cual es el que nos permite encontrar la primera coincidencia de un elemento bajo la lista.
+
+Para esto, iremos recorriendo la lista con el algoritmo intuitivo que se nos ocurre para esto considerando la forma en la que hemos formado nuestra estructura como un conjunto de nodos encadenados.
+
+Primero fijamos un nodo /n/. Si su elemento no es el que buscamos, procedemos a fijar su nodo /siguiente/ como /n/. Caso contrario, podemos detenernos.
+
+#+NAME: recorridoDeNodosSLL
+#+begin_src go :eval never :main no :package 'discard :noweb no-export
+	var elemento V
+	var n nodoSimple := &l.head
+	do {
+	    elementoFijado = n.elemento
+	    siguiente = &n.siguiente
+	} while ()
+#+end_src
 
 * Ordenamientos

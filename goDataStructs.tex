@@ -1,4 +1,4 @@
-% Created 2025-12-29 Mon 20:39
+% Created 2025-12-31 Wed 18:40
 % Intended LaTeX compiler: pdflatex
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
@@ -31,9 +31,9 @@
 \tableofcontents
 
 \section{Introducción}
-\label{sec:org4e51b71}
+\label{sec:org4e8a68f}
 \subsection{El arte de la ciencia y la ciencia del arte}
-\label{sec:org5baf372}
+\label{sec:org0429258}
 En estos momentos que estoy escribiendo la introducción, soy un estudiante de Quinto Semestre de Ciencias de la Computación en la UNAM.
 Han pasado unos cuantos semestres desde que tomé el curso de Estructuras de Datos en la facultad, un curso que consideré clave en su momento para formar todos los conocimientos esenciales que iba a necesitar el resto de la carrera: es un curso denso que utilizando como recipiente lo que conocemos como estructuras de datos te presenta de manera discreta pero notoria -como la brisa de aire que sientes al llegar por primera vez a un lugar extranjero que no conocías- varios conocimientos y sutilezas que espero seguir utilizando el resto de mi vida como profesional: los algoritmos.
 
@@ -42,28 +42,28 @@ He visto en mi corta vida como computólogo como solemos pasar por alto el enfoq
 Uno se deja absorber por las tecnologías que nos ofrece la computación moderna: frameworks que te permiten construir proyectos completos en cuestión de horas; metodologías ``ágiles'' que convierten el proceso de desarrollo de software en una cadena de comida rápida, donde se valora solamente la relación entre lineas de código escritas, tiempo invertido, y progresos logrados; agentes de IA que convierten el proceso de programación en una conversación con un ente todopoderoso que, bien aplicado, puede ser el equivalente a un equipo completo de becarios altamente entusiastas pero también tontos. Y en general, tecnologías que nos sirven para trabajar, pues evidentemente, en un mundo con un paso tan raudo y brutal como el nuestro, sería de tonto no rendirse a la producción en serie cuando el taller necesita competir con otras fábricas; pero que no poseen artesanalidad en su uso.
 La parte artística de la computación es muy fácil de ser olvidada, y justo eso es lo que me estaba pasando a mí: había dejado que el ritmo frenético de los proyectos universitarios y las herramientas ``mágicas'' opacaran el placer de entender, desde cero, cómo las estructuras de datos dan forma a los algoritmos con elegancia y precisión.
 \subsection{Mi viaje ritual}
-\label{sec:org9e85681}
+\label{sec:org273bf17}
 
 Para contrarrestar esto, comienzo este proyecto, en el cual voy a revisitar la materia que tanto me agradó en sus inicios. Al puro estilo de uno de los computólogos que más admiro, porque supo dar claramente con la parte artística de la computación y supo quedarse con ella: Donald Knuth. Knuth, con su monumental The Art of Computer Programming, no solo documentó algoritmos; los elevó a la categoría de literatura técnica, donde cada línea de código es parte de una narrativa mayor. Inspirado en esa filosofía, este documento adopta el enfoque de la programación literaria (literate programming), una técnica que él mismo pionerizó. Aquí, el código en Go no es un apéndice seco, sino un hilo tejido en el relato: explicaciones detalladas, decisiones de diseño y ejemplos ejecutables se entrelazan en un solo tejido narrativo, usando Org-mode como lienzo.
 Este no es un mero porting de estructuras de datos de otro lenguaje —aunque se inspira en el libro Estructuras de Datos con Java Moderno de Canek Peláez Valdez, reinterpretando sus conceptos para las idiosincrasias de Go: su simplicidad, concurrencia nativa y énfasis en la eficiencia idiomática—. Es un ritual personal de redescubrimiento. A lo largo de estas páginas, exploraremos desde lo básico (listas enlazadas, pilas, colas) hasta lo más sofisticado (árboles AVL, heaps binarios, grafos y hasta estructuras avanzadas como árboles de Fenwick y Segment Trees, que agrego por curiosidad propia). Cada sección no solo implementará el código, sino que reflexionará sobre por qué Go lo hace de manera única: ¿cómo la garbage collection de Go simplifica la gestión de memoria en árboles balanceados? ¿O cómo los canales y goroutines pueden potenciar grafos en entornos concurrentes?
 El objetivo es doble: para mí, es un ejercicio de artesanía computacional que me reconecta con las raíces algorítmicas de la disciplina; para ti, lector, espero que sea una guía clara y motivadora para dominar estructuras de datos en Go moderno, recordándonos que, en medio del caos tecnológico, siempre hay espacio para el arte de programar con intención y belleza.
 \subsection{Como leer este trabajo?}
-\label{sec:orgc37db22}
+\label{sec:org293c191}
 Este trabajo está escrito en org-mode con el paradigma de la programación letrada, y como tal, puede ser leído de varias maneras:
 
 La primera y la más fácil es en su forma de libro, la cual probablemente exista dentro de este repositorio. De esta forma , puedes leerlo como si directamente fuera un libro, con sus bloques de código como ejemplos del concepto de turno del que estemos hablando en ese momento. Esta forma definitivamente es la más rápida y directa de leer este trabajo.
 
 Por otro lado, la mejor forma pero puede que la más díficil es la forma en la que también fue escrito: en un entorno Emacs adecuadamente configurado para tanglear y weavear este documento, lo cual convertirá este trabajo en una pieza de lectura con bloques de código interactivos y ejecutables, al puro estilo de un Jupyter Notebook (plataforma interactiva que por cierto también nace como una forma de Programación Letrada), y además, en una pieza que generará todo el código fuente necesario para que estas estructuras de datos cobren vida como una librería con la que puedes trabajar y divertirte como si fuera una pieza de código tradicional.
 \subsection{Ok, pero cómo logro esta última forma?}
-\label{sec:org167d07b}
+\label{sec:orgd058146}
 Sección pendiente jajaj
 \section{Genéricos}
-\label{sec:orgd7f89a6}
+\label{sec:orgc962dd6}
 Muchas de las estructuras de datos que se van a revisar en este trabajo son \textbf{\textbf{colecciones}}, es decir, agrupaciones de elementos que permiten repeticiones (por lo que no son conjuntos).
 
 Y nos interesa poder realizar estas operaciones de ``guardar'' y ``retirar'' elementos de este conjunto de una manera repetible y que nos garantice que funcionará sin importar el \textbf{\textbf{tipo}} de los elementos que guardaremos en el conjunto. Para dejar clara esta necesidad, coloquémonos en esta situación:
 \subsection{El mundo sin genéricos}
-\label{sec:org17e67da}
+\label{sec:orgf3447ea}
 
 Estamos desarrollando una pequeña aplicación para calcular distintos tipos de máximos. En particular vamos a pensar en dos tipos de máximos: el máximo entre dos números, y el máximo entre dos cadenas de texto.
 
@@ -196,7 +196,7 @@ Entonces, necesitaríamos construir también una lista de Strings, una lista de 
 
 Y como en realidad no estamos accediendo a ninguna propiedad especial de los tipos que guardamos, es decir, no vamos a guardar los enteros de una manera distinta a la que guardamos las strings, pues todas estas estructuras en esencia serían la misma, solamente cambiando las declaraciones de sus elementos. Se nos antojaría que hubiera una mejor solución, no? Pues esos son los genéricos.
 \subsection{Un mundo con genéricos}
-\label{sec:org5879ddd}
+\label{sec:org5ed6c43}
 
 Los genéricos son una característica que todo lenguaje de programación necesita. Su propósito principal es justamente permitir que las funciones, clases, y nuestras estructuras de datos, puedan funcionar con diferentes tipos de datos sin tener que reescribir el código para cada uno. En lugar de necesitar especificar un tipo de dato concreto y con eso pedirle mucho a nuestros códigos, podemos dejar estos ``marcadores de posición'' que generalizarán el tipo de dato. Este ``marcador de posición'' luego será manejado por nuestro compilador o intérprete para el tipo de dato que sea necesario durante la ejecución.
 
@@ -243,7 +243,7 @@ Lo único que agregamos nuevo es cmp.Ordered, la cual es la interfaz que deben i
 
 Los genéricos van a ser una herramienta con la que vamos a estar trabajando durante prácticamente todo este viaje, pues nos servirán para generalizar nuestras estructuras de datos, para poder guardar cualquier tipo en las mismas sin problemas.
 \section{Interludio: Preparando el entorno de trabajo}
-\label{sec:orgbd04900}
+\label{sec:org0c6cbae}
 
 Antes de comenzar a ensuciarnos las manos construyendo esta biblioteca, debemos primero definirla para poder realizar una biblioteca utilizable por otros proyectos. Aunque dudo que realicemos un mejor trabajo que las implementaciones nativas (no por mucho, espero), creo que le daría una mayor formalidad a este trabajo el que pueda generar una biblioteca en condiciones, utilizable y todo.
 
@@ -269,7 +269,7 @@ En el caso de este trabajo, lo podemos encontrar en mi repositorio de Github ded
 
 Como segunda línea, la versión para la que el módulo va a estar diseñado. Como en teoría no usaremos ningun módulo de terceros, no será necesario agregar un apartado de requires, ni cualquiera de los otros parámetros que puede contener este archivo. En dado caso que lo fuera, lo iremos tratando conforme avancemos.
 \section{Iteradores}
-\label{sec:orge26da38}
+\label{sec:org843d948}
 Muchas de las estructuras de datos que vamos a implementar son \textbf{\textbf{Iterables}}. Que significa que son iterables?.
 El patrón de diseño Iterador nos dice que, si tenemos una estructura de datos que comprende varios elementos dentro de sí (sea colección, sea conjunto), esta misma estructura también nos debería de proporcionar una forma de recorrerla. Más formalmente:
 \begin{quote}
@@ -317,7 +317,7 @@ type Iterator[T any] interface{
 
 \end{verbatim}
 \subsection{Operador for-each}
-\label{sec:org9912131}
+\label{sec:org6d9d911}
 
 Otra razón por la que nos interesa implementar iteradores es porque de aquí también nace luego el operador for-each.
 
@@ -348,7 +348,7 @@ Es aquí donde usar Go nos va a cambiar un poco el paradigma respecto a esto. Po
 
 Antes de Go 1.23, esta funcionalidad se habría tenido que implementar de alguna manera relacionada probablemente a \emph{canales}, pero tenemos la suerte y buena fortuna de que justamente en esta versión se implementó finalmente la biblioteca \emph{iter}. Esta biblioteca nos proporciona la capacidad de que nuestros iteradores funcionen con el bucle nativo \emph{for range} que vimos anteriormente.
 \subsection{Package iter}
-\label{sec:org7ef3c37}
+\label{sec:org5dde0bf}
 El paquete nos provee de definiciones básicas y operaciones con las que vamos a poder implementar iteradores sobre secuencias en nuestras estructuras de datos. El paquete define los siguientes tipos de iteradores:
 
 \begin{verbatim}
@@ -383,7 +383,7 @@ type Iterable[V any] interface{
 
 \end{verbatim}
 \section{Colecciones}
-\label{sec:org636bf95}
+\label{sec:org907fb48}
 
 Casi todas, si no es que directamente todas las estructuras que vamos a implementar son colecciones\ldots{} al intentar escribir esta parte del libro, y al intentar leerla, se antojaría definir lo que es una colección, pero de hecho acabo de tener un Deja Vu a mis clases de Álgebra Superior, donde nos dimos cuenta de que si quisiéramos dar una definición formal para conjunto/colección entonces estamos metidos en un grave problema relacionado con posibles definiciones circulares o vaguedad en las que no lo sean\ldots{} entonces, para evitarnos este problema, vamos a definir nuestras colecciones no desde el significado real de esta palabra, si no desde el comportamiento que habríamos de esperar de una colección. Una colección debería de contener elementos, con los que podríamos realizar las siguientes operaciones:
 
@@ -431,14 +431,14 @@ En cambio, en Golang, la implementación de una interfaz es implícita; es decir
 
 Y finalmente, la definición de esta ultima interfaz nos deja preparados para comenzar a implementar la primera estructura de datos de este tour: Las Listas.
 \section{Listas}
-\label{sec:org8e5c16e}
+\label{sec:org4cf2739}
 Si pensamos solamente en una ``Lista'' así nada más, con solamente esta palabra para buscar definirla, podemos acomodar dentro de esta definición a una amplia gama de estructuras de datos. Cuando hablamos de una ``lista'' más que hablar de una estructura de datos concreta, podemos pensar incluso en una categoría de estructuras de datos que suelen obedecer al concepto sencillo ejemplificable con el ejemplo cotidiano de ``una lista de supermercado''.
 
 La definición más débil y flexible de una lista es ``una serie de elementos ordenados de manera consecutiva'', ya más adelante veremos que podemos hacernos muchos líos con esta definición tan sencilla y por eso digo que, a mi consideración, esto es más una categoría. En este capítulo, vamos a pasearnos por algunas de las estructuras de datos que se pueden considerar una ``Lista''. Incluyendo los slices, la estructura de datos característica de Golang que puede entrar dentro de esta categoría y que veremos más adelante.
 
 Y ya para terminar y ponernos manos a la obra, cabe decir que toda esta categoría de estructuras de datos puede y va a implementar la interfaz Colección que vimos en el capítulo anterior, porque esta interfaz engloba los comportamientos que esperamos de una Lista, incluyendo el comportamiento obvio de que debe de ser iterable, pues al tener elementos ordenados, podemos recorrerla de principio a fin con un iterador.
 \subsection{Singly Linked Lists}
-\label{sec:orgcbf0b9b}
+\label{sec:org4131a50}
 
 La forma de lista más sencilla en la cual podemos pensar para implementar es la Singly Linked List. Esta es la estructura de datos considerable como lista más primitiva en la que podemos pensar, pues fué implementada en 1957 en el lenguaje de programación IPL.
 
@@ -446,7 +446,7 @@ Para cubrir la definición más débil que vimos de una lista en la sección ant
 
 Antes de definir la estructura vamos a definir su unidad atómica: el nodo de lista.
 \subsubsection{Nodo Simple}
-\label{sec:org93d4679}
+\label{sec:org5a8c461}
 
 Un nodo es para una lista lo que un eslabón es para una cadena (de las de acero que usamos para amarrar nuestras bicis); es esa estructura de datos auxiliar que vamos a usar para que cada uno de los elementos de nuestras listas tengan las referencias necesarias para que la lista sea recorrible. En esta primera estructura de Singly Linked Lists, este nodo se define de la siguiente manera:
 
@@ -486,7 +486,7 @@ Para respetar el principio de encapsulamiento, el Nodo Simple -al igual que cual
 
 Una vez dicho esto y definido el nodo simple, podemos comenzar a construir esta estructura de datos.
 \subsubsection{Esqueleteo de la clase}
-\label{sec:orga5ca085}
+\label{sec:orga051609}
 
 \begin{verbatim}
 package lists
@@ -627,12 +627,12 @@ func (l *SinglyLinkedList[V]) IndiceDe(elemento *V) (i int, err Error){
 }
 \end{verbatim}
 
-Debido a las raíces \emph{Javaescas} de esta obra que tratamos en la \hyperref[sec:org4e51b71]{introducción}, me parece también correcto implementar equivalentes a los tradicionales métodos \emph{equals()} y \emph{toString()}. Para esto, vamos a hacer un pequeño paseo por la documentación y reglas de estilo de Golang para ver cuál es la mejor manera.
+Debido a las raíces \emph{Javaescas} de esta obra que tratamos en la \hyperref[sec:org4e8a68f]{introducción}, me parece también correcto implementar equivalentes a los tradicionales métodos \emph{equals()} y \emph{toString()}. Para esto, vamos a hacer un pequeño paseo por la documentación y reglas de estilo de Golang para ver cuál es la mejor manera.
 \subsubsection{Intermedio: equals y toString en GoLang}
-\label{sec:org3e82b76}
+\label{sec:org6795cfc}
 \begin{enumerate}
 \item Equals
-\label{sec:org33f945c}
+\label{sec:org5b9066a}
 El método equals de una clase en Java nos permite revisar si dos objetos son iguales \textbf{a nivel semántico o de lógica de negocios}, es decir, más que darnos una verificación real de igualdad, nos da una verificación de \textbf{equivalencia}.
 
 En Java esto es necesario porque si simplemente utilizamos el operador ==, dos objetos que son equivalentes siempre nos van a dar un resultado negativo, porque \textbf{el operador = = compara referencias, no los objetos como tal}. En Golang la cosa cambia, porque el operador = = nos permite también comparar objetos.
@@ -653,7 +653,7 @@ En la \href{https://pkg.go.dev/golang.org/x/exp/slices}{implementación oficial 
 
 Equal recibe dos slices hechos de objetos genéricos que necesariamente implementan la interfaz comparable. Si implementan dicha interfaz, entonces estos objetos nos proporcionan una forma de -valga la redundancia- ser comparados. La implementación de Equal utiliza dicha forma para comparar elemento por elemento del slice y retornarnos true si ambos slices tienen elementos ``iguales''.
 
-Si el slice está hecho de objetos genéricos no comparables, usaremos EqualFunc, la cual recibe tres cosas: los dos slices de objetos no comparables y una función comparadora que le proporcionaremos a EqualFunc para determinar si dos objetos de este estilo son ``equivalentes'' o no. Esto es similar a algo que aplicaremos más adelante cuando hablemos de \ref{sec:org9eed897}, así que por ahora, guardemos esta idea en nuestra memoria y quedémonos con esto para el tema principal de este capítulo.
+Si el slice está hecho de objetos genéricos no comparables, usaremos EqualFunc, la cual recibe tres cosas: los dos slices de objetos no comparables y una función comparadora que le proporcionaremos a EqualFunc para determinar si dos objetos de este estilo son ``equivalentes'' o no. Esto es similar a algo que aplicaremos más adelante cuando hablemos de \ref{sec:org5860193}, así que por ahora, guardemos esta idea en nuestra memoria y quedémonos con esto para el tema principal de este capítulo.
 
 Usando estas dos funciones le damos flexibilidad a nuestra clase y un estilo bastante parecido a lo que ya existe en Golang, por lo que considero que respetamos el espíritu del lenguaje de programación en el que estamos trabajando.
 
@@ -670,7 +670,7 @@ func EqualFunc[E1, E2 any](l1 *SinglyLinkedList[E1], l2 *SinglyLinkedList[E2], e
 
 Es más, le dimos la suficiente flexiblidad a estas funciones que en realidad \textbf{no le estamos pidiendo a EqualFunc que las estructuras guarden los mismos tipos}, siempre que nos proporciona cualquiera que sea el método para comparar balones con globos, se puede realizar.
 \item ToString
-\label{sec:orga48940a}
+\label{sec:org876c5c5}
 
 El método toString en Java se utiliza para retornar una representación escrita del objeto. Esta representación en su \href{https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html\#toString--}{documentación}
 se especifica como ``concisa pero informativa que sea fácil de leer por una persona''. Si nos ponemos a investigar la documentación de Golang en busca de un método similar, podemos encontrar la interfaz \href{https://pkg.go.dev/fmt\#example-Stringer}{fmt.Stringer}. Esta interfaz pide implementar un método String el cual es el equivalente directo de un toString en Java, en el sentido de que es el que le indica a Golang cómo generar dicha representación escrita del objeto.
@@ -685,19 +685,16 @@ func (l *SinglyLinkedList[V]) String() (s String, err Error){
 
 Con este último método, ya tenemos una lista de métodos que implementar para nuestra primera estructura de datos, quedando de la siguiente forma:
 
-\phantomsection
-\label{}
 \begin{verbatim}
 package lists
-
 import (
 	"iter"
 	"github.com/IsaacNietoG/goDataStructs/interfaces/coleccion"
 )
 
 type nodoSimple[V any] struct {
-	var elemento V
-	var siguiente *nodoSimple
+	elemento V
+	siguiente *nodoSimple
 }
 
 type SinglyLinkedList {
@@ -709,83 +706,81 @@ type SinglyLinkedList {
 var _ Coleccion[any] = (*SinglyLinkedList[any])(nil)
 
 func (l *SinglyLinkedList[V]) Agrega(elemento V) (err Error){
-	
+
 }
 
 func (l *SinglyLinkedList[V]) Elimina(elemento V) (err Error){
-	
+
 }
 
 func (l *SinglyLinkedList[V]) Contiene(elemento V) (b bool, err Error) {
-	
+
 }
 
 func (l *SinglyLinkedList[V]) EsVacia() (b bool, err Error) {
-	
+
 }
 
 func (l *SinglyLinkedList[V]) GetElementos() (i int, err Error) {
-	
+
 }
 
 func (l *SinglyLinkedList[V]) Limpia() (err Error){
-	
+
 }
 
 func (l *SinglyLinkedList[V]) All() iter.Seq[V] {
-	
+
 }
 
 func (l *SinglyLinkedList[V]) AgregaInicio() (err Error){
-	
+
 }
 
 func (l *SinglyLinkedList[V]) Inserta(indice int, elemento V) (err Error){
-	
+
 }
 
 func (l *SinglyLinkedList[V]) EliminaPrimero() (elemento V, err Error){
-	
+
 }
 
 func (l *SinglyLinkedList[V]) EliminaUltimo() (elemento V, err Error){
-	
+
 }
 
 func (l *SinglyLinkedList[V]) GetPrimero() (elemento V, err Error){
-	
+
 }
 
 func (l *SinglyLinkedList[V]) GetUltimo() (elemento V, err Error){
-	
+
 }
 
 func (l *SinglyLinkedList[V]) Copia() (copia *SinglyLinkedList[V], err Error){
-	
+
 }
 
 func (l *SinglyLinkedList[V]) Get(i int) (elemento V, err Error){
-	
+
 }
 
 func (l *SinglyLinkedList[V]) IndiceDe(elemento *V) (i int, err Error){
-	
+
 }
 
 func Equal[T comparable](l1, l2 *SinglyLinkedList[T]) (b bool, err Error){
-	
+
 }
 func EqualFunc[E1, E2 any](l1 *SinglyLinkedList[E1], l2 *SinglyLinkedList[E2], eq func (E1, E2) bool) (b bool, err Error){
-	
+
 }
 
-func (l *SinglyLinkedList[V]) String() (s String, err Error){
-	
-}
+func (l *SinglyLinkedList[V]) String() (s String, err Error)
 \end{verbatim}
 \end{enumerate}
 \subsubsection{Implementaciones de los métodos}
-\label{sec:orgd5eb364}
+\label{sec:orgc11666f}
 
 Una vez definidos los comportamientos que se nos antojaría que tuviera nuestra estructura de datos, procedemos a comenzar a implementarlos. Para implementar los comportamientos de una clase primero tenemos que entender claramente a nivel conceptual lo que queremos que nuestra clase sea y haga. Entonces, vamos a regresar al pizarrón para pensar en qué es lo que hace a una Singly Linked List una Singly Linked List.
 
@@ -848,7 +843,7 @@ De todas formas, es importante también señalar que en muchos casos los algorit
 Entonces, en cada algoritmo siempre nos vamos a detener a ver las características de la implementacion decidida por el autor del texto (yo merengues).
 \begin{enumerate}
 \item Agrega
-\label{sec:org56d891a}
+\label{sec:orgeabb632}
 Este método es para agregar elementos a una lista, por omisión se hace al final. Tenemos dos casos diferentes: cuando la lista es vacía, y cuando contiene al menos un elemento.
 
 En cualquiera de los dos casos, las instrucciones en comuń consisten en construir un nuevo nodo \emph{n} e incrementar el contador de elementos en la lista. Posterior a esto, realizamos la verificación necesaria para partir a uno de los dos casos, quedando hasta el momento de esta forma la implementación:
@@ -902,7 +897,9 @@ if l.tail == nil {
 return nil
 
 \end{verbatim}
+\item Elimina
+\label{sec:org17f50fa}
 \end{enumerate}
 \section{Ordenamientos}
-\label{sec:org9eed897}
+\label{sec:org5860193}
 \end{document}

@@ -6,11 +6,11 @@ import (
 )
 
 type nodoSimple[V any] struct {
-	var elemento V
-	var siguiente *nodoSimple
+	elemento V
+	siguiente *nodoSimple[V]
 }
 
-type SinglyLinkedList {
+type SinglyLinkedList[V any] struct{
 	head *nodoSimple[V]
 	tail *nodoSimple[V]
 	size int
@@ -19,6 +19,19 @@ type SinglyLinkedList {
 var _ Coleccion[any] = (*SinglyLinkedList[any])(nil)
 
 func (l *SinglyLinkedList[V]) Agrega(elemento V) (err Error){
+	
+	n:= &nodoSimple[V]{elemento: elemento}
+	l.size++
+	
+	if l.tail == nil {
+		l.head = n
+		l.tail = n
+	} else {
+		l.tail.siguiente = n
+		l.tail = n
+	}
+	
+	return nil
 	
 }
 
