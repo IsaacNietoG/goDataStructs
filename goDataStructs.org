@@ -381,6 +381,94 @@ type Iterable[V any] interface{
 
 #+end_src
 
+* Sobre la comparación de elementos en Golang
+
+Muchos algoritmos esenciales de las estructuras de datos que vamos a ver en este texto requieren comparar elementos. Más específicamente, /asumen/ que existe una forma de saber si dos elementos son /iguales o equivalentes/.
+
+En Java, esto es sencillo de realizar porque se asume que todo objeto implementa su propio método equals, el cual da una pauta para decir que dos instancias de una clase son "iguales" de la siguiente forma:
+
+#+begin_src java :eval never
+Object objeto1 = new Object(...);
+Object objeto2 = new Object(...);
+
+bool sonEquivalentes =objeto1.equals(objeto2)
+
+#+end_src
+
+En Golang esto no es tan sencillo, porque no existe una pauta obligada para determinar si dos elementos son iguales. Para determinar esto se definen las siguientes reglas según el tipo de los elementos:
+
+- Los tipos booleanos son comparables. Dos valores booleanos son iguales si ambos son /true/ o ambos son /false/
+- Los tipos enteros son comparables. Dos números son iguales si... bueno... son iguales
+- Los tipos de punto flotante son comparables. Se define su regla de comparación según el estándar [[https://ieeexplore.ieee.org/document/8766229][IEEE 754]].
+- Los tipos complejos son comparables. Dos valores complejos son iguales si sus componentes reales e imaginarios son iguales.
+- Las strings son comparables. Dos strings son iguales si coinciden caracter a caracter.
+- Los punteros son comparables. Dos punteros son iguales si apuntan a la misma dirección de memoria.
+- Los canales son comparables. Dos canales son iguales si fueron creados por la misma llamada a /make/ o ambos son =nil=
+- Las interfaces son comparables. Dos interfaces son iguales si sus tipos dinámicos y valores dinámicos son iguales; o si ambas son =nil=. El concepto de valor y tipo dinámicos se escapa del enfoque de este texto, pero se profundiza en la [[https://go.dev/ref/spec#Variables][especificación oficial de Go]]
+
+Y así podemos seguir, pero lo importante es que Go ofrece una flexiblidad en la comparabilidad de elementos que, aunque en general la podemos pensar como una buena feature del lenguaje, nos lleva a cambiar nuestras estructuras de datos para ajustarnos a las convenciones del lenguaje.
+
+Debido a este problema, los algoritmos que /asumen/ la existencia de una forma de saber si dos elementos son /iguales/ tienen que ser modificados.
+
+Existen varias soluciones para este problema el cual me quitó el sueño varios días, pero al final decidí decantarme por la siguiente:
+
+Dado un algoritmo /f(i)/ con /i/ la entrada del algoritmo, que necesite de una función /g(a, b)/ para determinar si =a==b=, la implementación de /f/ derivará dos algoritmos:
+
+Sea /f(i)/ el algoritmo original sin cambios, al cual vamos a agregarle la restricción de que retorne un error si detecta que el tipo de la estructura no es comparable.
+
+Sea /fFunc(i, g(a,b))/ un algoritmo derivado, el cual en esencia es /f(i)/ pero con la diferencia de que, dado que no le damos una restricción como a /f/, el algoritmo no tiene la garantía de que tiene una forma de comparar elementos, el usuario debe de proporcionar la funcion /g(a,b)/ que usará el algoritmo para funcionar.
+
+Vamos a traducirlo a un ejemplo más concreto:
+
+El método Equal es un algoritmo general que todas nuestras Colecciones (y posiblemente también las estructuras que no sean colecciones) deben de implementar. A grandes rasgos, Equal nos permite comparar dos estructuras de datos del mismo tipo y retornar true si ambas estructuras son iguales, false en caso contrario.
+
+El algoritmo para realizar esta operación es sencillo: realizamos un recorrido a través de la estructura y vamos comparando sus elementos uno a uno: si logramos terminar el recorrido sin determinar que alguno de los elementos entre las estructuras son distintos, entonces podemos afirmar con seguridad que ambas estructuras son iguales.
+
+Inmediatamente se exhibe el problema que vimos: ¿Cómo determinamos que dos elementos son iguales?. Si los elementos de nuestra estructura son de tipo comparable, podemos garantizar con seguridad que usar el operador == nos permite realizar esta aserción y no vamos a tener problemas en tiempo de ejecución, por lo que la firma para Equals puede ser la siguiente:
+
+#+begin_src go :eval never
+func (e *Estructura[V]) Equal(e2 *Estructura[V]) (bool,error){...}
+#+end_src
+
+Dentro del funcionamiento de Equals realizamos la verificación de que V sea un tipo comparable. Si V no es un tipo comparable, entonces inmediatamente retornamos un error.
+
+Luego, para los tipos que no sean comparables directamente, ofrecemos el método EqualFunc, el cual le pide al usuario una función para comparar los elementos.
+
+#+begin_src go :eval never
+func (e *Estructura[V]) Equal(e2 *Estructura[V], cmp func(V,V)) (bool,error){...}
+#+end_src
+
+Mi decisión para decantarme por esta convención no es enteramente personal, es de hecho una suerte de convención idiomática dentro del lenguaje que podemos ver en el package de [[https://pkg.go.dev/slices#Equal][slices]]. No directamente de la misma forma, porque en este paquete se utilizan funciones globales, lo cual facilita bastante la verificación de que V sea comparable, pero es aquí donde debo admitir que entra mi opinión personal: no me gusta usar funciones globales.
+
+El hecho de que estos métodos sean métodos y no funciones globales nos trae una dificultad para realizar la verificación de que el tipo que guarda una estructura de datos es comparable: el sistema de tipos de Go no permite restringir un método a un subconjunto de tipos genéricos si la estructura original no estaba ya restringida.
+
+Es decir, como siempre vamos a definir nuestras estructuras como =Estructura[V any]=, no tenemos una forma en tiempo de compilación de determinar si el método Equal debe existir o no. Si ya dijimos en la definición de nuestra Estructura que V no tiene requerimentos (implementando =any=), no podemos luego pedirle que sea =comparable=. Entonces, esta validación debe de trasladarse a ser realizada en tiempo de ejecución.
+
+Para lograrlo, recurrimos al paquete /reflect/. La solución consiste en realizar una inspección del tipo V justo antes de iniciar el algoritmo. Si la inspección nos dice que el tipo no soporta el operador ====, abortamos la operación de forma segura. Esto se traduce a que nuestro método para evaluar si un tipo sería comparable dentro de una función así sería de esta forma:
+
+#+begin_src go :eval never
+var zero V
+tipo := reflect.TypeOf(&zero).Elem()
+
+if !tipo.Comparable() {
+	return false, fmt.Errorf("El tipo %T no es comparable; usa EqualFunc", zero)
+}
+#+end_src
+
+Es importante utilizar con cuidado y sobriedad esta verificación, pues todas las operaciones que involucran reflexión son inherentemente lentas.
+
+* Sobre ToString
+
+El método toString en Java se utiliza para retornar una representación escrita del objeto. Esta representación en su [[https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html#toString--][documentación]]
+se especifica como "concisa pero informativa que sea fácil de leer por una persona". Si nos ponemos a investigar la documentación de Golang en busca de un método similar, podemos encontrar la interfaz [[https://pkg.go.dev/fmt#example-Stringer][fmt.Stringer]]. Esta interfaz pide implementar un método String el cual es el equivalente directo de un toString en Java, en el sentido de que es el que le indica a Golang cómo generar dicha representación escrita del objeto.
+
+Para abrazar las raíces /Javaescas/ de este texto, todas las estructuras de datos van a implementar esta interface, lo que nos permitirá decir que todas nuestras estructuras de datos tienen una representación escrita.
+
+#+begin_src go :eval never
+func (l *SinglyLinkedList[V]) String() (s String, err Error){
+}
+#+end_src
+
 * Colecciones
 
 Casi todas, si no es que directamente todas las estructuras que vamos a implementar son colecciones... al intentar escribir esta parte del libro, y al intentar leerla, se antojaría definir lo que es una colección, pero de hecho acabo de tener un Deja Vu a mis clases de Álgebra Superior, donde nos dimos cuenta de que si quisiéramos dar una definición formal para conjunto/colección entonces estamos metidos en un grave problema relacionado con posibles definiciones circulares o vaguedad en las que no lo sean... entonces, para evitarnos este problema, vamos a definir nuestras colecciones no desde el significado real de esta palabra, si no desde el comportamiento que habríamos de esperar de una colección. Una colección debería de contener elementos, con los que podríamos realizar las siguientes operaciones:
@@ -391,6 +479,8 @@ Casi todas, si no es que directamente todas las estructuras que vamos a implemen
 - Saber si la colección está vacía.
 - Obtener el número de los elementos de su interior.
 - Limpiar la colección, es decir, despojarla de sus elementos.
+- Determinar si es igual a otra colección.
+- Retornar una representación escrita de sí misma.
 
 Además, todas las estructuras que caigan bajo la definición de colección deberían de ser iterables. Es aquí donde resulta orgánico definirnos otra interfaz llamada Coleccion, la cual extienda a Iterable e implemente todos los métodos necesarios para cumplir con las funcionalidades que hemos platicado hemos de tener.
 
@@ -400,18 +490,25 @@ package interfaces
 import "iter"
 
 type Coleccion[V any] interface{
-	Agrega(elemento V) (err Error)
-	Elimina(elemento V) (err Error)
-	Contiene(elemento V) (b bool, err Error)
-	EsVacia() (b bool, err Error)
-	GetElementos() (i int, err Error)
-	Limpia() (err Error)
+	Agrega(elemento V) (error)
+	Elimina(elemento V) (error)
+	EliminaFunc(elemento V, cmp func(V,V)) (error)
+	Contiene(elemento V) (bool, error)
+	ContieneFunc(elemento V, cmp func(V,V)) (bool, error)
+	EsVacia() (bool, error)
+	GetElementos() (int, error)
+	Limpia() (error)
 	All() iter.Seq[V]
+	Equal(coleccion Coleccion[V]) (bool, error)
+	EqualFunc(coleccion Coleccion[V], cmp func(V,V)) (bool, error)
+	String() (string)
 }
 
 #+end_src
 
-Podrás notar que todos los métodos definidos siempre regresan un objeto Error, esto es debido a una característica particular de Golang relacionada al [[https://go.dev/blog/error-handling-and-go][manejo de errores en Go]]. Por ahora no vamos a ahondar en ello, vamos a dejar simplemente que esto afecte en las declaraciones de los métodos, pero posteriormente se abordará de manera detenida.
+Todas las funciones que requieren de comparabilidad entre elementos han sido divididas en su variable original y su variable /Func/ conforme a lo discutido en la [[Sobre la comparación de elementos en Golang][sección correspondiente]].
+
+Además, podrás notar que todos los métodos definidos siempre regresan un tipo error, esto es debido a una característica particular de Golang relacionada al [[https://go.dev/blog/error-handling-and-go][manejo de errores en Go]]. Por ahora no vamos a ahondar en ello, vamos a dejar simplemente que esto afecte en las declaraciones de los métodos, pero posteriormente se abordará de manera detenida.
 
 También podemos señalar una característica importante de Golang respecto a la implementación de interfaces. En la mayoría de lenguajes de programación, para definir que una clase o tipo implementa una interfaz, es necesario hacerlo de manera explícita, con alguna palabra segura del lenguaje que nos permita escribir una declaración del tipo:
 
@@ -428,6 +525,7 @@ En cambio, en Golang, la implementación de una interfaz es implícita; es decir
 Y finalmente, la definición de esta ultima interfaz nos deja preparados para comenzar a implementar la primera estructura de datos de este tour: Las Listas.
 
 * Listas
+
 Si pensamos solamente en una "Lista" así nada más, con solamente esta palabra para buscar definirla, podemos acomodar dentro de esta definición a una amplia gama de estructuras de datos. Cuando hablamos de una "lista" más que hablar de una estructura de datos concreta, podemos pensar incluso en una categoría de estructuras de datos que suelen obedecer al concepto sencillo ejemplificable con el ejemplo cotidiano de "una lista de supermercado".
 
 La definición más débil y flexible de una lista es "una serie de elementos ordenados de manera consecutiva", ya más adelante veremos que podemos hacernos muchos líos con esta definición tan sencilla y por eso digo que, a mi consideración, esto es más una categoría. En este capítulo, vamos a pasearnos por algunas de las estructuras de datos que se pueden considerar una "Lista". Incluyendo los slices, la estructura de datos característica de Golang que puede entrar dentro de esta categoría y que veremos más adelante.
@@ -624,8 +722,6 @@ func (l *SinglyLinkedList[V]) IndiceDe(elemento *V) (i int, err Error){
 }
 #+end_src
 
-Debido a las raíces /Javaescas/ de esta obra que tratamos en la [[Introducción][introducción]], me parece también correcto implementar equivalentes a los tradicionales métodos /equals()/ y /toString()/. Para esto, vamos a hacer un pequeño paseo por la documentación y reglas de estilo de Golang para ver cuál es la mejor manera.
-
 *** Intermedio: equals y toString en GoLang
 **** Equals
 El método equals de una clase en Java nos permite revisar si dos objetos son iguales *a nivel semántico o de lógica de negocios*, es decir, más que darnos una verificación real de igualdad, nos da una verificación de *equivalencia*.
@@ -648,7 +744,7 @@ En la [[https://pkg.go.dev/golang.org/x/exp/slices][implementación oficial de S
 
 Equal recibe dos slices hechos de objetos genéricos que necesariamente implementan la interfaz comparable. Si implementan dicha interfaz, entonces estos objetos nos proporcionan una forma de -valga la redundancia- ser comparados. La implementación de Equal utiliza dicha forma para comparar elemento por elemento del slice y retornarnos true si ambos slices tienen elementos "iguales".
 
-Si el slice está hecho de objetos genéricos no comparables, usaremos EqualFunc, la cual recibe tres cosas: los dos slices de objetos no comparables y una función comparadora que le proporcionaremos a EqualFunc para determinar si dos objetos de este estilo son "equivalentes" o no. Esto es similar a algo que aplicaremos más adelante cuando hablemos de [[Ordenamientos]], así que por ahora, guardemos esta idea en nuestra memoria y quedémonos con esto para el tema principal de este capítulo.
+Si el slice está hecho de objetos genéricos no comparables, usaremos EqualFunc, la cual recibe tres cosas: los dos slices de objetos no comparables y una función comparadora que le proporcionaremos a EqualFunc para determinar si dos objetos de este estilo son "equivalentes" o no. Esto es similar a algo que aplicaremos más adelante cuando hablemos de [[Ordenamientos]],así que por ahora, guardemos esta idea en nuestra memoria y quedémonos con esto para el tema principal de este capítulo.
 
 Usando estas dos funciones le damos flexibilidad a nuestra clase y un estilo bastante parecido a lo que ya existe en Golang, por lo que considero que respetamos el espíritu del lenguaje de programación en el que estamos trabajando.
 
