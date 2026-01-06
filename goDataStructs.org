@@ -412,11 +412,11 @@ Debido a este problema, los algoritmos que /asumen/ la existencia de una forma d
 
 Existen varias soluciones para este problema el cual me quitó el sueño varios días, pero al final decidí decantarme por la siguiente:
 
-Dado un algoritmo /f(i)/ con /i/ la entrada del algoritmo, que necesite de una función /g(a, b)/ para determinar si =a==b=, la implementación de /f/ derivará dos algoritmos:
+Dado un algoritmo /f(i)/ con /i/ la entrada del algoritmo, que necesite de una función /cmp(a, b)/ para determinar si =a==b=, la implementación de /f/ derivará dos algoritmos:
 
 Sea /f(i)/ el algoritmo original sin cambios, al cual vamos a agregarle la restricción de que retorne un error si detecta que el tipo de la estructura no es comparable.
 
-Sea /fFunc(i, g(a,b))/ un algoritmo derivado, el cual en esencia es /f(i)/ pero con la diferencia de que, dado que no le damos una restricción como a /f/, el algoritmo no tiene la garantía de que tiene una forma de comparar elementos, el usuario debe de proporcionar la funcion /g(a,b)/ que usará el algoritmo para funcionar.
+Sea /fFunc(i, g(a,b))/ un algoritmo derivado, el cual en esencia es /f(i)/ pero con la diferencia de que, dado que no le damos una restricción como a /f/, el algoritmo no tiene la garantía de que tiene una forma de comparar elementos, el usuario debe de proporcionar la funcion /cmp(a,b)/ que usará el algoritmo para funcionar.
 
 Vamos a traducirlo a un ejemplo más concreto:
 
@@ -492,15 +492,15 @@ import "iter"
 type Coleccion[V any] interface{
 	Agrega(elemento V) (error)
 	Elimina(elemento V) (error)
-	EliminaFunc(elemento V, cmp func(V,V)) (error)
+	EliminaFunc(elemento V, cmp func(V,V) bool) (error)
 	Contiene(elemento V) (bool, error)
-	ContieneFunc(elemento V, cmp func(V,V)) (bool, error)
+	ContieneFunc(elemento V, cmp func(V,V) bool) (bool, error)
 	EsVacia() (bool, error)
 	GetElementos() (int, error)
 	Limpia() (error)
 	All() iter.Seq[V]
 	Equal(coleccion Coleccion[V]) (bool, error)
-	EqualFunc(coleccion Coleccion[V], cmp func(V,V)) (bool, error)
+	EqualFunc(coleccion Coleccion[V], cmp func(V,V) bool) (bool, error)
 	String() (string)
 }
 
@@ -622,27 +622,35 @@ Luego declaramos los métodos necesarios para que la estructura implemente Colec
 
 #+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb no-export
 
-func (l *SinglyLinkedList[V]) Agrega(elemento V) (err Error){
+func (l *SinglyLinkedList[V]) Agrega(elemento V) (error){
 	<<implementacionAgregaSLL>>
 }
 
-func (l *SinglyLinkedList[V]) Elimina(elemento V) (err Error){
+func (l *SinglyLinkedList[V]) Elimina(elemento V) (error){
 	<<implementacionEliminaSLL>>
 }
 
-func (l *SinglyLinkedList[V]) Contiene(elemento V) (b bool, err Error) {
+func (l *SinglyLinkedList[V]) EliminaFunc(elemento V, cmp func(V,V) bool) (error){
+	<<implementacionEliminaFuncSLL>>
+}
+
+func (l *SinglyLinkedList[V]) Contiene(elemento V) (bool,error) {
 	<<implementacionContieneSLL>>
 }
 
-func (l *SinglyLinkedList[V]) EsVacia() (b bool, err Error) {
+func (l *SinglyLinkedList[V]) ContieneFunc(elemento V, cmp func(V,V) bool) (bool,error) {
+	<<implementacionContieneFuncSLL>>
+}
+
+func (l *SinglyLinkedList[V]) EsVacia() (bool, error) {
 	<<implementacionEsVaciaSLL>>
 }
 
-func (l *SinglyLinkedList[V]) GetElementos() (i int, err Error) {
+func (l *SinglyLinkedList[V]) GetElementos() (int, error) {
 	<<implementacionGetElementosSLL>>
 }
 
-func (l *SinglyLinkedList[V]) Limpia() (err Error){
+func (l *SinglyLinkedList[V]) Limpia() (error){
 	<<implementacionLimpiaSLL>>
 }
 
@@ -650,12 +658,23 @@ func (l *SinglyLinkedList[V]) All() iter.Seq[V] {
 	<<implementacionAllSLL>>
 }
 
+func (l *SinglyLinkedList[V]) Equal(coleccion Coleccion[V]) (bool,error){
+	<<implementacionEqualSLL>>
+}
+
+func (l *SinglyLinkedList[V]) EqualFunc(coleccion Coleccion[V], cmp func(V,V) bool) (bool, error){
+	<<implementacionEqualFuncSLL>>
+}
+
+func (l *SinglyLinkedList[V]) String() (string){
+	<<implementacionStringSLL>>
+}
 #+end_src
 
 Así mismo, también vamos a agregar algunos métodos propios de la clase, que van a ser los siguientes:
 
 #+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
-func (l *SinglyLinkedList[V]) AgregaInicio() (err Error){
+func (l *SinglyLinkedList[V]) AgregaInicio() (error){
 	<<implementacionAgregaInicioSLL>>
 }
 #+end_src
@@ -663,21 +682,21 @@ func (l *SinglyLinkedList[V]) AgregaInicio() (err Error){
 Por omisión, todos los elementos que agreguemos a una lista serán al final, pero también nos es conveniente tener un método por si queremos agregar un elemento al mero inicio de la lista.
 
 #+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
-func (l *SinglyLinkedList[V]) Inserta(indice int, elemento V) (err Error){
-	<<implementacionAgregaInicioSLL>>
+func (l *SinglyLinkedList[V]) Inserta(indice int, elemento V) (error){
+	<<implementacionInsertaSLL>>
 }
 #+end_src
 
 Queremos poder insertar un elemento en un lugar arbitrario,  para eso es el método inserta, el cual dado un índice y elemento, inserta dicho elemento en dicho índice y recorre los consecuentes.
 
 #+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
-func (l *SinglyLinkedList[V]) EliminaPrimero() (elemento V, err Error){
+func (l *SinglyLinkedList[V]) EliminaPrimero() (V, error){
 	<<implementacionEliminaPrimeroSLL>>
 }
 #+end_src
 
 #+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
-func (l *SinglyLinkedList[V]) EliminaUltimo() (elemento V, err Error){
+func (l *SinglyLinkedList[V]) EliminaUltimo() (V, error){
 	<<implementacionEliminaUltimoSLL>>
 }
 #+end_src
@@ -687,13 +706,13 @@ Siempre podemos eliminar tanto el primer elemento de la lista como el último. Y
 De la misma forma, a veces solamente queremos obtener estos elementos sin eliminarlos, para eso serán getPrimero y getUltimo
 
 #+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
-func (l *SinglyLinkedList[V]) GetPrimero() (elemento V, err Error){
+func (l *SinglyLinkedList[V]) GetPrimero() (V, error){
 	<<implementacionGetPrimeroSLL>>
 }
 #+end_src
 
 #+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
-func (l *SinglyLinkedList[V]) GetUltimo() (elemento V, err Error){
+func (l *SinglyLinkedList[V]) GetUltimo() (V, error){
 	<<implementacionGetUltimoSLL>>
 }
 #+end_src
@@ -701,7 +720,7 @@ func (l *SinglyLinkedList[V]) GetUltimo() (elemento V, err Error){
 Luego, necesitamos un método para copiar la lista.
 
 #+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
-func (l *SinglyLinkedList[V]) Copia() (copia *SinglyLinkedList[V], err Error){
+func (l *SinglyLinkedList[V]) Copia() (*SinglyLinkedList[V], error){
 	<<implementacionCopiaSLL>>
 }
 #+end_src
@@ -709,7 +728,7 @@ func (l *SinglyLinkedList[V]) Copia() (copia *SinglyLinkedList[V], err Error){
 Y obviamente vamos a querer un método para obtener el i-ésimo elemento de la lista.
 
 #+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
-func (l *SinglyLinkedList[V]) Get(i int) (elemento V, err Error){
+func (l *SinglyLinkedList[V]) Get(i int) (V, error){
 	<<implementacionGetSLL>>
 }
 #+end_src
@@ -717,60 +736,16 @@ func (l *SinglyLinkedList[V]) Get(i int) (elemento V, err Error){
 E inversamente, dada la referencia de un elemento (que sabemos existe en la lista) podemos saber el índice que ocupa en la misma con el siguiente método.
 
 #+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
-func (l *SinglyLinkedList[V]) IndiceDe(elemento *V) (i int, err Error){
+func (l *SinglyLinkedList[V]) IndiceDe(elemento V) (int, error){
 	<<implementacionIndiceDeSLL>>
 }
 #+end_src
 
-*** Intermedio: equals y toString en GoLang
-**** Equals
-El método equals de una clase en Java nos permite revisar si dos objetos son iguales *a nivel semántico o de lógica de negocios*, es decir, más que darnos una verificación real de igualdad, nos da una verificación de *equivalencia*.
-
-En Java esto es necesario porque si simplemente utilizamos el operador ==, dos objetos que son equivalentes siempre nos van a dar un resultado negativo, porque *el operador = = compara referencias, no los objetos como tal*. En Golang la cosa cambia, porque el operador = = nos permite también comparar objetos.
-
-La [[https://go.dev/ref/spec#Operators][especificación de Go]] nos indica que podemos usar el operador == para comparar estructuras.
-
-#+begin_quote
-[...]Two struct values are equal if their corresponding non-blank field values are equal. The fields are compared in source order, and comparison stops as soon as two field values differ[...]
-#+end_quote
-
-Pero de todas formas, esto no nos sirve para motivos de nuestras estructuras de datos; ya que, usando nuestro ejemplo de las listas, esta regla de comparación nos llevaría al caso extraño de que dos listas serían reconocidas como iguales por este comparador si tienen los mismos elementos de cabeza y cola, y la misma longitud, sin importar todos los elementos de enmedio; obviamente esto no es correcto.
-
-Y en Golang no existe una interfaz que exija implementar el método equals, ni tampoco un método equals por omisión como existe en otros casos. Golang en general nos da bastante flexibilidad respecto a este tema, incluso proveyéndonos de varios mecanismos para comparar estructuras que no voy a mencionar porque considero que se escapan del alcance de este texto.
-
-Lo que podemos hacer es imitar a una estructura nativa de Golang que veremos más adelante: los slices.
-
-En la [[https://pkg.go.dev/golang.org/x/exp/slices][implementación oficial de Slices de Go]] podemos encontrar dos métodos interesantes para este asunto: Equal y EqualFunc.
-
-Equal recibe dos slices hechos de objetos genéricos que necesariamente implementan la interfaz comparable. Si implementan dicha interfaz, entonces estos objetos nos proporcionan una forma de -valga la redundancia- ser comparados. La implementación de Equal utiliza dicha forma para comparar elemento por elemento del slice y retornarnos true si ambos slices tienen elementos "iguales".
-
-Si el slice está hecho de objetos genéricos no comparables, usaremos EqualFunc, la cual recibe tres cosas: los dos slices de objetos no comparables y una función comparadora que le proporcionaremos a EqualFunc para determinar si dos objetos de este estilo son "equivalentes" o no. Esto es similar a algo que aplicaremos más adelante cuando hablemos de [[Ordenamientos]],así que por ahora, guardemos esta idea en nuestra memoria y quedémonos con esto para el tema principal de este capítulo.
-
-Usando estas dos funciones le damos flexibilidad a nuestra clase y un estilo bastante parecido a lo que ya existe en Golang, por lo que considero que respetamos el espíritu del lenguaje de programación en el que estamos trabajando.
-
-Quedando de esta forma estas funciones:
+Debido a que esta función también requiere de comparabilidad entre elementos, IndiceDe debe tener su respectiva versión Func.
 
 #+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
-func Equal[T comparable](l1, l2 *SinglyLinkedList[T]) (b bool, err Error){
-	<<implementacionEqualSLL>>
-}
-func EqualFunc[E1, E2 any](l1 *SinglyLinkedList[E1], l2 *SinglyLinkedList[E2], eq func (E1, E2) bool) (b bool, err Error){
-	<<implementacionEqualFuncSLL>>
-}
-#+end_src
-
-Es más, le dimos la suficiente flexiblidad a estas funciones que en realidad *no le estamos pidiendo a EqualFunc que las estructuras guarden los mismos tipos*, siempre que nos proporciona cualquiera que sea el método para comparar balones con globos, se puede realizar.
-
-**** ToString
-
-El método toString en Java se utiliza para retornar una representación escrita del objeto. Esta representación en su [[https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html#toString--][documentación]]
-se especifica como "concisa pero informativa que sea fácil de leer por una persona". Si nos ponemos a investigar la documentación de Golang en busca de un método similar, podemos encontrar la interfaz [[https://pkg.go.dev/fmt#example-Stringer][fmt.Stringer]]. Esta interfaz pide implementar un método String el cual es el equivalente directo de un toString en Java, en el sentido de que es el que le indica a Golang cómo generar dicha representación escrita del objeto.
-
-Entonces, vamos a agregar dicho método a nuestra estructura actual y a todas las subsecuentes que creemos.
-
-#+begin_src go :eval never :tangle lists/singlylinkedlist.go :main no :package 'discard :noweb tangle
-func (l *SinglyLinkedList[V]) String() (s String, err Error){
-	<<implementacionStringSLL>>
+func (l *SinglyLinkedList[V]) IndiceDeFunc(elemento V, cmp func(V,V) bool) (int, error){
+	<<implementacionIndiceDeSLL>>
 }
 #+end_src
 
@@ -780,15 +755,15 @@ Con este último método, ya tenemos una lista de métodos que implementar para 
 package lists
 import (
 	"iter"
-	"github.com/IsaacNietoG/goDataStructs/interfaces/coleccion"
+	"github.com/IsaacNietoG/goDataStructs/interfaces/Coleccion"
 )
 
 type nodoSimple[V any] struct {
 	elemento V
-	siguiente *nodoSimple
+	siguiente *nodoSimple[V]
 }
 
-type SinglyLinkedList {
+type SinglyLinkedList[V any] struct{
 	head *nodoSimple[V]
 	tail *nodoSimple[V]
 	size int
@@ -796,78 +771,49 @@ type SinglyLinkedList {
 
 var _ Coleccion[any] = (*SinglyLinkedList[any])(nil)
 
-func (l *SinglyLinkedList[V]) Agrega(elemento V) (err Error){
+func (l *SinglyLinkedList[V]) Agrega(elemento V) (error){...}
 
-}
+func (l *SinglyLinkedList[V]) Elimina(elemento V) (error){...}
 
-func (l *SinglyLinkedList[V]) Elimina(elemento V) (err Error){
+func (l *SinglyLinkedList[V]) EliminaFunc(elemento V, cmp func(V,V) bool) (error){...}
 
-}
+func (l *SinglyLinkedList[V]) Contiene(elemento V) (bool,error) {...}
 
-func (l *SinglyLinkedList[V]) Contiene(elemento V) (b bool, err Error) {
+func (l *SinglyLinkedList[V]) ContieneFunc(elemento V, cmp func(V,V) bool) (bool,error) {...}
 
-}
+func (l *SinglyLinkedList[V]) EsVacia() (bool, error) {...}
 
-func (l *SinglyLinkedList[V]) EsVacia() (b bool, err Error) {
+func (l *SinglyLinkedList[V]) GetElementos() (int, error) {...}
 
-}
+func (l *SinglyLinkedList[V]) Limpia() (error){...}
 
-func (l *SinglyLinkedList[V]) GetElementos() (i int, err Error) {
+func (l *SinglyLinkedList[V]) All() iter.Seq[V] {...}
 
-}
+func (l *SinglyLinkedList[V]) Equal(coleccion Coleccion[V]) (bool,error){...}
 
-func (l *SinglyLinkedList[V]) Limpia() (err Error){
+func (l *SinglyLinkedList[V]) EqualFunc(coleccion Coleccion[V], cmp func(V,V) bool) (bool, error){...}
 
-}
+func (l *SinglyLinkedList[V]) String() (string){...}
 
-func (l *SinglyLinkedList[V]) All() iter.Seq[V] {
+func (l *SinglyLinkedList[V]) AgregaInicio() (error){...}
 
-}
+func (l *SinglyLinkedList[V]) Inserta(indice int, elemento V) (error){...}
 
-func (l *SinglyLinkedList[V]) AgregaInicio() (err Error){
+func (l *SinglyLinkedList[V]) EliminaPrimero() (V, error){...}
 
-}
+func (l *SinglyLinkedList[V]) EliminaUltimo() (V, error){...}
 
-func (l *SinglyLinkedList[V]) Inserta(indice int, elemento V) (err Error){
+func (l *SinglyLinkedList[V]) GetPrimero() (V, error){...}
 
-}
+func (l *SinglyLinkedList[V]) GetUltimo() (V, error){...}
 
-func (l *SinglyLinkedList[V]) EliminaPrimero() (elemento V, err Error){
+func (l *SinglyLinkedList[V]) Copia() (*SinglyLinkedList[V], error){...}
 
-}
+func (l *SinglyLinkedList[V]) Get(i int) (V, error){...}
 
-func (l *SinglyLinkedList[V]) EliminaUltimo() (elemento V, err Error){
+func (l *SinglyLinkedList[V]) IndiceDe(elemento V) (int, error){...}
 
-}
-
-func (l *SinglyLinkedList[V]) GetPrimero() (elemento V, err Error){
-
-}
-
-func (l *SinglyLinkedList[V]) GetUltimo() (elemento V, err Error){
-
-}
-
-func (l *SinglyLinkedList[V]) Copia() (copia *SinglyLinkedList[V], err Error){
-
-}
-
-func (l *SinglyLinkedList[V]) Get(i int) (elemento V, err Error){
-
-}
-
-func (l *SinglyLinkedList[V]) IndiceDe(elemento *V) (i int, err Error){
-
-}
-
-func Equal[T comparable](l1, l2 *SinglyLinkedList[T]) (b bool, err Error){
-
-}
-func EqualFunc[E1, E2 any](l1 *SinglyLinkedList[E1], l2 *SinglyLinkedList[E2], eq func (E1, E2) bool) (b bool, err Error){
-
-}
-
-func (l *SinglyLinkedList[V]) String() (s String, err Error)
+func (l *SinglyLinkedList[V]) IndiceDeFunc(elemento V, cmp func(V,V) bool) (int, error){...}
 #+end_src
 
 *** Implementaciones de los métodos
@@ -926,7 +872,7 @@ La característica principal de este tipo de lista es que, como vimos previament
 
 Visualmente podemos entonces comenzar a entender el mecanismo más general que vamos a utilizar para recorrer la lista; el cual es movernos referencia por referencia siempre hacia adelante, porque no tenemos forma de mirar atrás. Conceptualmente esto es sencillo de describir, como la mayoría de algoritmos necesarios para implementar estos comportamientos necesarios, sin embargo, van a ir naciendo ciertas particularidades cuando vayamos realizando las implementaciones.
 
-Es importante señalar que los algoritmos existen como una entidada conceptualmente separada de sus implementaciones, un algoritmo puede ser implementado en varios lenguajes de programación, siempre que el programador responsable se encargue de ajustarse a las sutilezas del lenguaje en el que lo vaya a implementar.
+Es importante señalar que los algoritmos existen como una entidad conceptualmente separada de sus implementaciones, un algoritmo puede ser implementado en varios lenguajes de programación, siempre que el programador responsable se encargue de ajustarse a las sutilezas del lenguaje en el que lo vaya a implementar.
 
 En el libro del cual me inspiro para este texto, todos los algoritmos son vistos sin necesariamente ahondar en la implementación necesaria para que las estructuras vistas sean funcionales; sin embargo, para que la librería generada por este texto sea utilizable, es necesario que este texto sí se preocupe por las implementaciones de los algoritmos que veamos. La diferencia en este hecho reside en las filosofías de ambos textos y los resultados que buscan generar cada uno: uno es un libro con fines didácticos que busca que sus lectores se ensucien las manos para entender los conceptos, el otro (este mismo) es probablemente el soliloquio de un estudiante, que busca generar una biblioteca utilizable a través de programación letrada.
 
@@ -976,25 +922,44 @@ Si la lista no es vacía, entonces el rabo /r/ es distinto de 'nil'; haremos que
 Así quedando la implementación final de este algoritmo:
 
 #+begin_src go :eval no :main no :package 'discard :noweb yes
+func (l *SinglyLinkedList[V]) Agrega(elemento V) (error){
 <<implementacionAgregaSLL>>
+}
 #+end_src
 
 **** Elimina
 
-Para eliminar un elemento de la lista -obviamente- primero tenemos que encontrarlo. Entonces, primero tenemos que tratar un algoritmo auxiliar e implementarlo, el cual es el que nos permite encontrar la primera coincidencia de un elemento bajo la lista.
+Esta es la primera de las funciones que vamos a implementar en este texto que necesita de una forma de comparación para descubrir si un elemento es el que estamos buscando o no. Como tal, en la explicación de la implementación de esta función recae la importancia de tener muy claro los mecanismos que vamos a utilizar para esto.
 
-Para esto, iremos recorriendo la lista con el algoritmo intuitivo que se nos ocurre para esto considerando la forma en la que hemos formado nuestra estructura como un conjunto de nodos encadenados.
+Primero que nada, decir que en todos los métodos que tengan versión /normal/ y versión /Func/ voy a implementar primero la versión Func. Por qué? Porque una vez implementada la versión Func de una de estos métodos, es trivial utilizar el método Func dentro del método original para que funcione correctamente. Lo haremos de la siguiente forma:
 
-Primero fijamos un nodo /n/. Si su elemento no es el que buscamos, procedemos a fijar su nodo /siguiente/ como /n/. Caso contrario, podemos detenernos.
+Inicialmente necesitamos encontrar dentro de la lista el nodo del elemento a eliminar. Esta es la primera parte del algoritmo. Para ello, vamos a usar la función comparadora proporcionada por el usuario, la cual, como vimos inicialmente, debe de retornar true si el elemento actual es el elemento que buscamos y false en caso contrario.
 
-#+NAME: recorridoDeNodosSLL
-#+begin_src go :eval never :main no :package 'discard :noweb no-export
-	var elemento V
-	var n nodoSimple := &l.head
-	do {
-	    elementoFijado = n.elemento
-	    siguiente = &n.siguiente
-	} while ()
+#+NAME: busquedaDeNodoYCasoTrivialSLL
+#+begin_src go :eval no :main no :package 'discard :noweb no-export
+	if l.tail == nil {
+		return fmt.Errorf("La lista está vacía")
+	}
+
+	nodoPrevio := l.head
+	for nodoPrevio.siguiente != nil {
+		if cmp(nodoPrevio.siguiente.elemento, elemento){
+			<<logicaDeEliminacionSLL>>
+		}
+		nodoPrevio = nodoPrevio.siguiente
+	}
+
+	return fmt.Errorf("Elemento no encontrado")
+
 #+end_src
+
+#+NAME: logicaDeEliminacionSLL
+#+begin_src go :eval no :main no :package 'discard :noweb no-export
+nodoPrevio.siguiente = nodoPrevio.siguiente.siguiente
+l.size--
+return nil
+#+end_src
+
+El caso trivial es que la lista esté vacía, lo cual, al igual que en el método Agrega, lo verificaremos con la cola de la lista, si la cola es 'nil' la lista está vacía y terminamos.
 
 * Ordenamientos

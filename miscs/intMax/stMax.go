@@ -1,5 +1,4 @@
 package main
-
 import "fmt"
 
 func strMax(a string, b string) (string) {
