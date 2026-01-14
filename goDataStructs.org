@@ -1055,7 +1055,7 @@ Lo unico que hacemos es definir la función ´cmp´ que el algoritmo EliminaFunc
 De todas formas, no podemos cantar victoria todavía, porque si resulta que los elementos de la lista son elementos no comparables (el meollo de todo este asunto en primer lugar), esto nos va a provocar un panic en tiempo de ejecución. Debemos primero verificar que el tipo de los elementos de la lista es comparable. Para esto usaremos reflexión. No me voy a detener mucho en esto, porque la reflexión es un pecado capital cuando estamos usando programación orientada a objetos, así que sólo dejemos esto aquí, pidamos perdón a la deidad en la que cada quien crea, y sigamos con nuestras vidas.
 
 #+NAME: verificacionDeInterfazComparableSLL
-#+begin_src go :eval no :main no :package 'discad :noweb yes
+#+begin_src go :eval no :main no :package 'discard :noweb yes
 var zero V
 if !reflect.TypeOf(&zero).Elem().Comparable() {
 	return fmt.Errorf("tipo no comparable")
@@ -1064,6 +1064,32 @@ if !reflect.TypeOf(&zero).Elem().Comparable() {
 
 **** Contiene
 
+Este método es extremadamente parecido a lo que hemos visto previamente. Simplemente necesitamos ir recorriendo la lista nodo por nodo, usar la función comparadora y retornar true cuando encontremos el elemento buscado.
+
+#+NAME: implementacionContieneFuncSLL
+#+begin_src go :eval no :main no :package 'discard
+nodo := l.head
+
+for nodo != nil {
+	if cmp(nodo.elemento, elemento){
+		return true
+	}
+	nodo = nodo.siguiente
+}
+
+return false
+#+end_src
+
+Este método no tiene mucha ciencia, principalmente porque no estamos realizando ningún cambio sobre la lista. De manera análoga a lo que vimos previamente, su versión normal queda de la siguiente forma:
+
+#+NAME: implementacionContieneSLL
+#+begin_src go :eval no :main no :package 'discard :noweb no-export
+<<verificacionDeInterfazComparableSLL>>
+
+return l.ContieneFunc(elemento, func(a ,b V) bool {
+	return a == b
+})
+#+end_src
 
 
 * Ordenamientos

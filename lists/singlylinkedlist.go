@@ -77,11 +77,27 @@ func (l *SinglyLinkedList[V]) EliminaFunc(elemento V, cmp func(V,V) bool) (error
 }
 
 func (l *SinglyLinkedList[V]) Contiene(elemento V) (bool,error) {
+	var zero V
+	if !reflect.TypeOf(&zero).Elem().Comparable() {
+		return fmt.Errorf("tipo no comparable")
+	}
 	
+	return l.ContieneFunc(elemento, func(a ,b V) bool {
+		return a == b
+	})
 }
 
 func (l *SinglyLinkedList[V]) ContieneFunc(elemento V, cmp func(V,V) bool) (bool,error) {
+	nodo := l.head
 	
+	for nodo != nil {
+		if cmp(nodo.elemento, elemento){
+			return true
+		}
+		nodo = nodo.siguiente
+	}
+	
+	return false
 }
 
 func (l *SinglyLinkedList[V]) EsVacia() (bool, error) {
