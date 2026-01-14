@@ -1,7 +1,8 @@
 package lists
+
 import (
 	"iter"
-	"github.com/IsaacNietoG/goDataStructs/interfaces/Coleccion"
+	"github.com/IsaacNietoG/goDataStructs/interfaces/coleccion"
 )
 
 type nodoSimple[V any] struct {
@@ -35,10 +36,43 @@ func (l *SinglyLinkedList[V]) Agrega(elemento V) (error){
 }
 
 func (l *SinglyLinkedList[V]) Elimina(elemento V) (error){
+	var zero V
+	if !reflect.TypeOf(&zero).Elem().Comparable() {
+		return fmt.Errorf("tipo no comparable")
+	}
 	
+	return l.EliminaFunc(elemento, func(a ,b V) bool {
+		return a == b
+	})
 }
 
-func (l *SinglyLinkedList[V]) EliminaFunc(elemento V, cmp func(V,V)) (error){
+func (l *SinglyLinkedList[V]) EliminaFunc(elemento V, cmp func(V,V) bool) (error){
+	if l.tail == nil {
+		return fmt.Errorf("La lista está vacía")
+	}
+	if cmp(l.head.elemento, elemento) {
+		l.size--
+		l.head = l.head.siguiente
+		if l.head = nil {
+			l.tail = nil
+		}
+		return nil
+	}
+	
+	nodoPrevio := l.head
+	for nodoPrevio.siguiente != nil {
+		if cmp(nodoPrevio.siguiente.elemento, elemento){
+			if nodoPrevio.siguiente.siguiente = nil {
+				l.tail = nodoPrevio
+			}
+			nodoPrevio.siguiente = nodoPrevio.siguiente.siguiente
+			l.size--
+			return nil
+		}
+		nodoPrevio = nodoPrevio.siguiente
+	}
+	
+	return fmt.Errorf("Elemento no encontrado")
 	
 }
 
@@ -46,7 +80,7 @@ func (l *SinglyLinkedList[V]) Contiene(elemento V) (bool,error) {
 	
 }
 
-func (l *SinglyLinkedList[V]) ContieneFunc(elemento V, cmp func(V,V)) (bool,error) {
+func (l *SinglyLinkedList[V]) ContieneFunc(elemento V, cmp func(V,V) bool) (bool,error) {
 	
 }
 
@@ -70,7 +104,7 @@ func (l *SinglyLinkedList[V]) Equal(coleccion Coleccion[V]) (bool,error){
 	
 }
 
-func (l *SinglyLinkedList[V]) EqualFunc(coleccion Coleccion[V], cmp func(V,V)) (bool, error){
+func (l *SinglyLinkedList[V]) EqualFunc(coleccion Coleccion[V], cmp func(V,V) bool) (bool, error){
 	
 }
 
@@ -114,6 +148,6 @@ func (l *SinglyLinkedList[V]) IndiceDe(elemento V) (int, error){
 	
 }
 
-func (l *SinglyLinkedList[V]) IndiceDeFunc(elemento V, cmp func(V,V)) (int, error){
+func (l *SinglyLinkedList[V]) IndiceDeFunc(elemento V, cmp func(V,V) bool) (int, error){
 	
 }

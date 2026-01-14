@@ -933,33 +933,137 @@ Esta es la primera de las funciones que vamos a implementar en este texto que ne
 
 Primero que nada, decir que en todos los métodos que tengan versión /normal/ y versión /Func/ voy a implementar primero la versión Func. Por qué? Porque una vez implementada la versión Func de una de estos métodos, es trivial utilizar el método Func dentro del método original para que funcione correctamente. Lo haremos de la siguiente forma:
 
-Inicialmente necesitamos encontrar dentro de la lista el nodo del elemento a eliminar. Esta es la primera parte del algoritmo. Para ello, vamos a usar la función comparadora proporcionada por el usuario, la cual, como vimos inicialmente, debe de retornar true si el elemento actual es el elemento que buscamos y false en caso contrario.
+El caso trivial es que la lista esté vacía, lo cual, al igual que en el método Agrega, lo verificaremos con la cola de la lista, si la cola es 'nil' la lista está vacía y terminamos.
 
-#+NAME: busquedaDeNodoYCasoTrivialSLL
+#+begin_src go :eval no :main no :package 'discard :noweb no-export :noweb-ref eliminaSLL
+if l.tail == nil {
+	return fmt.Errorf("La lista está vacía")
+}
+#+end_src
+
+Luego comenzaremos a recorrer la lista. Debido a que esta es una lista simplemente ligada, debemos de -otra vez- tener en cuenta que cada vez que "pasamos" un nodo, no tenemos forma de regresar a él. Siempre podemos mirar hacia adelante del nodo que tengamos fijado, pero nunca hacia atrás (como la vida misma). Entonces, el nodo que tengamos fijado en un momento dado mientras recorremos la lista es el nodo más anterior al que podemos tener acceso, con esto presente, hay que recorrer la lista con cuidado.
+
+Cuando eliminamos un nodo de la lista, visualmente lo que hacemos es "saltarlo", es decir, que su nodo anterior pase directamente al que le seguía sin pasar por el que queremos eliminar. De esta manera, el nodo eliminado se vuelve inalcanzable desde la lista, y por lo tanto, eventualmente el recolector de basura de Golang se deshará de él.
+
+#+begin_export latex
+\begin{tikzpicture}[
+    node distance=1cm,
+    box/.style={draw, rectangle split, rectangle split parts=2, rectangle split horizontal, minimum height=1cm, inner sep=5pt, fill=white},
+    % Estilo para el nodo que será eliminado (atenuado)
+    removed/.style={draw=red!50, text=red!50, dashed},
+    link/.style={-Latex, thick, blue!70!black},
+    % Estilo para el enlace que se rompe
+    broken/.style={-Latex, dashed, red!50},
+    % Estilo para el nuevo puntero "salto"
+    newlink/.style={-Latex, thick, green!50!black, bend left=35}
+]
+
+  % --- Nodos ---
+  \node[box] (n1) {12 \nodepart{two}};
+  \node[box, right=of n1] (n2) {45 \nodepart{two}};
+  \node[box, removed, right=of n2] (n3) {7 \nodepart{two}}; % Nodo a eliminar
+  \node[box, right=of n3] (n4) {23 \nodepart{two}};
+  \node[box, right=of n4] (n5) {89 \nodepart{two}};
+  \node[right=0.8cm of n5] (null) {\textbf{NULL}};
+
+  % --- Enlaces Originales que permanecen ---
+  \draw[link] (n1.two east) -- (n2.west);
+  \draw[link] (n4.two east) -- (n5.west);
+  \draw[link] (n5.two east) -- (null.west);
+
+  % --- Enlaces que se eliminan (Boceto de la acción) ---
+  \draw[broken] (n2.two east) -- (n3.west);
+  \draw[broken] (n3.two east) -- (n4.west);
+
+  % --- La esencia del algoritmo: La redirección ---
+  \draw[newlink] (n2.two north) to node[above, font=\small] {siguiente = n3.siguiente} (n4.north west);
+
+  % --- Etiquetas ---
+  \node[above=0.2cm of n1] {head};
+  \node[below=0.2cm of n3, red!70, font=\bfseries\small] {Memoria libre};
+
+\end{tikzpicture}
+#+end_export
+
+Esto ya nos da una noción bastante firme de que para buscar el nodo a eliminar, siempre vamos a fijarnos en el nodo siguiente al nodo que tengamos fijado. Si el nodo a eliminar fuera el nodo que tenemos fijado, no tendríamos forma de realizar este algoritmo, pues no tendríamos forma de tomar al nodo anterior y cambiar su referencia siguiente.
+
+Aclarado esto, comenzamos a elaborar el método general. Primero necesitamos encontrar dentro de la lista el nodo del elemento a eliminar. Esta es la primera parte del algoritmo. Para ello, vamos a usar la función comparadora proporcionada por el usuario, la cual, como vimos inicialmente, debe de retornar true si el elemento actual es el elemento que buscamos y false en caso contrario.
+
+Hay que observar primero un caso particular: el caso en el que la cabeza de la lista contenga el elemento a eliminar. Si la cabeza de la lista contiene el elemento a eliminar, simplemente "descabezamos" la lista y colocamos el nodo siguiente como nueva cabeza. Igual, esto no es tan sencillo porque también de paso comprendemos el caso particular en el que ese fuera el último nodo de la lista, en cuyo caso también hay que encargarnos de fijar a ´nil´ la cola de la lista, para simbolizar que ahora la lista está completamente vacía.
+
+#+begin_src go :eval no :main no :package 'discard :noweb no-export :noweb-ref eliminaSLL
+if cmp(l.head.elemento, elemento) {
+	l.size--
+	l.head = l.head.siguiente
+	if l.head = nil {
+		l.tail = nil
+	}
+	return nil
+}
+#+end_src
+
+Luego, si este no es el caso, podemos comenzar a buscar en el resto de la lista. Fijamos un nodoPrevio (le llamo así porque siempre será el nodo previo al que tendríamos que eliminar) y es el que iremos cambiando. Observamos el elemento del nodo siguiente al que fijamos, si resulta ser igual al que necesitamos, entonces podemos comenzar con la lógica de eliminación, caso contrario, seguimos recorriendo la lista cambiando el nodo fijado a su siguiente. Ya de paso, haremos esto hasta que nos quedemos sin nodos. Si llegamos al nodo rabo y no hemos encontrado el elemento (sabemos que es el nodo rabo por su siguiente nulo) entonces retornamos el error correspondiente.
+
+#+NAME: busquedaDeNodoEliminaSLL
 #+begin_src go :eval no :main no :package 'discard :noweb no-export
-	if l.tail == nil {
-		return fmt.Errorf("La lista está vacía")
-	}
 
-	nodoPrevio := l.head
-	for nodoPrevio.siguiente != nil {
-		if cmp(nodoPrevio.siguiente.elemento, elemento){
-			<<logicaDeEliminacionSLL>>
-		}
-		nodoPrevio = nodoPrevio.siguiente
+nodoPrevio := l.head
+for nodoPrevio.siguiente != nil {
+	if cmp(nodoPrevio.siguiente.elemento, elemento){
+		<<logicaDeEliminacionSLL>>
 	}
+	nodoPrevio = nodoPrevio.siguiente
+}
 
-	return fmt.Errorf("Elemento no encontrado")
+return fmt.Errorf("Elemento no encontrado")
 
 #+end_src
 
+Si encontramos el elemento, realizamos la lógica de eliminación vista previamente: saltamos el nodo eliminado. No sin antes realizar otra verificación para un caso particular adicional: el nodo a eliminar es la tail de la lista. En este caso, simplemente agregamos la instrucción de fijar el nodo previo como la nueva tail de la lista, el resto de instrucciones son iguales. Para verificar si hemos caido en este caso, verificamos si el siguiente del nodo a eliminar es ´nil´; esto solo puede ocurrir si el nodo a eliminar es la tail de la lista.
+
 #+NAME: logicaDeEliminacionSLL
 #+begin_src go :eval no :main no :package 'discard :noweb no-export
+if nodoPrevio.siguiente.siguiente = nil {
+	l.tail = nodoPrevio
+}
 nodoPrevio.siguiente = nodoPrevio.siguiente.siguiente
 l.size--
 return nil
 #+end_src
 
-El caso trivial es que la lista esté vacía, lo cual, al igual que en el método Agrega, lo verificaremos con la cola de la lista, si la cola es 'nil' la lista está vacía y terminamos.
+Quedando el método completo de la siguiente manera:
+
+#+NAME: implementacionEliminaFuncSLL
+#+begin_src go :eval no :main no :package 'discard :noweb yes
+<<eliminaSLL>>
+<<busquedaDeNodoEliminaSLL>>
+#+end_src
+
+Es aquí donde exhibo que es trivial implementar la versión normal del algoritmo una vez implementada su versión Func. Ya que la única diferencia entre ambas era el origen de la función comparadora, donde el algoritmo original utiliza ´==´ y el algoritmo Func utiliza una función comparadora dada por el usuario, es trivial definir la última en términos de la primera y usarla para implementar el algoritmo original, tal que así:
+
+#+NAME: implementacionEliminaSLL
+#+begin_src go :eval no :main no :package 'discard :noweb no-export
+<<verificacionDeInterfazComparableSLL>>
+
+return l.EliminaFunc(elemento, func(a ,b V) bool {
+	return a == b
+})
+#+end_src
+
+Lo unico que hacemos es definir la función ´cmp´ que el algoritmo EliminaFunc va a utilizar como ´a == b´.
+
+De todas formas, no podemos cantar victoria todavía, porque si resulta que los elementos de la lista son elementos no comparables (el meollo de todo este asunto en primer lugar), esto nos va a provocar un panic en tiempo de ejecución. Debemos primero verificar que el tipo de los elementos de la lista es comparable. Para esto usaremos reflexión. No me voy a detener mucho en esto, porque la reflexión es un pecado capital cuando estamos usando programación orientada a objetos, así que sólo dejemos esto aquí, pidamos perdón a la deidad en la que cada quien crea, y sigamos con nuestras vidas.
+
+#+NAME: verificacionDeInterfazComparableSLL
+#+begin_src go :eval no :main no :package 'discad :noweb yes
+var zero V
+if !reflect.TypeOf(&zero).Elem().Comparable() {
+	return fmt.Errorf("tipo no comparable")
+}
+#+end_src
+
+**** Contiene
+
+
 
 * Ordenamientos

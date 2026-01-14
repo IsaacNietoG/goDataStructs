@@ -1,3 +1,5 @@
+package main
+
 import "fmt"
 
 func intMax(a int, b int) int {
